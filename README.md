@@ -81,7 +81,7 @@
 ## 📄 版權資訊
 
 **存股紀錄系統 (Stock Portfolio System)**  
-版權所有 © 2025 [你的姓名]
+版權所有 © 2025 徐國洲
 
 本專案採用 [MIT License](LICENSE) 授權條款。
 
@@ -92,8 +92,8 @@
 - ⚠️ 不提供任何形式的擔保
 
 ### 📧 聯絡方式
-- Email: [你的 email]
-- GitHub: [你的 GitHub]
+- Email: kenshu528@gmail.com
+- GitHub: https://github.com/kenshu528-oss
 
 ### ⚖️ 免責聲明
 本軟體僅供個人投資記錄使用，不構成投資建議。股價資料來源於第三方 API，準確性請自行驗證。使用者需自行承擔投資風險。
@@ -109,7 +109,7 @@
 4. 發起 Pull Request
 
 ### 貢獻者：
-- [你的姓名] - 原始作者
+- 徐國洲 - 原始作者
 
 ---
 

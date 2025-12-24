@@ -2,8 +2,8 @@
  * 存股紀錄系統 - 股價 API 模組
  * Stock Portfolio System - Stock API Module
  * 
- * 版權所有 (c) 2025 [你的姓名]
- * Copyright (c) 2025 [Your Name]
+ * 版權所有 (c) 2025 徐國洲
+ * Copyright (c) 2025 Xu Guo Zhou
  * 
  * 採用 MIT 授權條款
  * Licensed under MIT License
