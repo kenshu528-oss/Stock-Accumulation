@@ -27,6 +27,10 @@
 - [x] docs/COPYRIGHT.md - 版權聲明
 - [x] docs/DEPLOYMENT.md - 部署指南
 - [x] docs/SHARING_TEMPLATE.md - 分享模板
+- [x] GITHUB_UPLOAD_SOP.md - GitHub 上傳標準作業程序
+- [x] GITHUB_UPLOAD_QUICK_REFERENCE.md - 快速參考卡
+- [x] TROUBLESHOOTING_GUIDE.md - 疑難排解指南
+- [x] COMMERCIAL_USE_NOTICE.md - 商業使用聲明
 
 ### 🧪 測試檔案
 - [x] tests/dividend-test.html - 股息管理測試
