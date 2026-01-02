@@ -12,7 +12,7 @@
  * ⚠️ IMPORTANT: Commercial use is strictly prohibited!
  * 
  * 作者：徐國洲
- * 版本：v1.2.2.0033
+ * 版本：v1.2.2.0034
  * 建立日期：2025-12-24
  * 
  * 功能：
@@ -1856,20 +1856,27 @@ https://creativecommons.org/licenses/by-nc/4.0/deed.zh_TW
             return;
         }
 
+        console.log(`開始計算 ${stock.code} 的歷史股息...`);
+        console.log(`購買記錄:`, stock.purchaseHistory);
+        console.log(`股息資料:`, stockDividends);
+
         let calculatedDividends = [];
         let totalCalculatedDividends = 0;
 
         // 遍歷每個購買記錄
         stock.purchaseHistory.forEach(purchase => {
             const purchaseDate = new Date(purchase.date);
+            console.log(`檢查購買日期: ${purchase.date} (${purchaseDate})`);
             
             // 找出購買後的所有股息發放
             stockDividends.forEach(dividend => {
                 const exDate = new Date(dividend.exDate);
+                console.log(`  檢查除息日: ${dividend.exDate} (${exDate}), 購買日: ${purchaseDate}`);
                 
                 // 如果除息日在購買日之後，則有資格領取股息
                 if (exDate > purchaseDate) {
                     const cashAmount = purchase.shares * dividend.cashDividend;
+                    console.log(`  ✅ 符合條件！股息金額: ${cashAmount}`);
                     
                     if (cashAmount > 0) {
                         // 檢查是否已經有這筆股息記錄
@@ -1879,26 +1886,33 @@ https://creativecommons.org/licenses/by-nc/4.0/deed.zh_TW
                         
                         if (!existingDividend) {
                             const dividendRecord = {
-                                id: `calc_${stock.id}_${dividend.year}`,
+                                id: `calc_${stock.id}_${dividend.year}_${dividend.quarter || ''}`,
                                 date: dividend.exDate,
                                 type: 'cash',
                                 perShare: dividend.cashDividend,
                                 shares: purchase.shares,
                                 grossAmount: cashAmount,
-                                taxAmount: cashAmount * 0.1, // 假設10%扣稅
-                                netAmount: cashAmount * 0.9,
-                                taxRate: 10,
-                                note: `自動計算 - ${dividend.year}年股息`,
+                                taxAmount: 0, // 不扣稅
+                                netAmount: cashAmount, // 使用稅前金額
+                                taxRate: 0,
+                                note: `自動計算 - ${dividend.year}年${dividend.quarter || ''}股息`,
                                 calculatedFromPurchase: true // 標記為自動計算
                             };
                             
                             calculatedDividends.push(dividendRecord);
                             totalCalculatedDividends += dividendRecord.netAmount;
+                            console.log(`  新增股息記錄:`, dividendRecord);
+                        } else {
+                            console.log(`  ⚠️ 股息記錄已存在，跳過`);
                         }
                     }
+                } else {
+                    console.log(`  ❌ 除息日在購買日之前，不符合條件`);
                 }
             });
         });
+
+        console.log(`計算完成，共 ${calculatedDividends.length} 筆股息`);
 
         if (calculatedDividends.length > 0) {
             // 將計算出的股息加入記錄
@@ -1909,6 +1923,7 @@ https://creativecommons.org/licenses/by-nc/4.0/deed.zh_TW
             if (stock.dividendAdjustment !== false) {
                 const dividendPerShare = stock.totalDividends / stock.shares;
                 stock.adjustedCostPrice = Math.max(0.01, stock.costPrice - dividendPerShare);
+                console.log(`調整後成本價: ${stock.adjustedCostPrice} (原成本價: ${stock.costPrice}, 每股股息: ${dividendPerShare})`);
             }
             
             this.saveData();
@@ -1919,7 +1934,8 @@ https://creativecommons.org/licenses/by-nc/4.0/deed.zh_TW
                   `計算出 ${calculatedDividends.length} 筆股息記錄\n` +
                   `總股息收入：${totalCalculatedDividends.toLocaleString()} 元`);
         } else {
-            console.log(`${stock.code} 購買日期後無股息發放記錄`);
+            console.warn(`${stock.code} 購買日期後無股息發放記錄`);
+            alert(`⚠️ 提示\n\n${stock.name} (${stock.code})\n購買日期後無符合條件的股息記錄`);
         }
     }
 
