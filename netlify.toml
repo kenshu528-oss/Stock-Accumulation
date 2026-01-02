@@ -1,0 +1,46 @@
+# Netlify 部署設定檔
+# Stock Portfolio System - Netlify Configuration
+
+[build]
+  # 基礎目錄設定為 netlify-upload
+  base = "netlify-upload"
+  
+  # 發布目錄（netlify-upload 本身就是要發布的內容）
+  publish = "."
+  
+  # 不需要建置命令（純靜態HTML）
+  command = ""
+
+# 網站設定
+[build.environment]
+  NODE_VERSION = "18"
+
+# 重定向規則（SPA支援）
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# 標頭設定（安全性和快取）
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
