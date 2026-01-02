@@ -12,7 +12,7 @@
  * ⚠️ IMPORTANT: Commercial use is strictly prohibited!
  * 
  * 作者：徐國洲
- * 版本：v1.2.2.0034
+ * 版本：v1.2.2.0
  * 建立日期：2025-12-24
  * 
  * 功能：
@@ -244,53 +244,38 @@ class StockPortfolio {
         const codeInput = document.getElementById('stockCode');
         const nameInput = document.getElementById('stockName');
         const codeStatus = document.getElementById('codeSearchStatus');
+        const nameStatus = document.getElementById('nameSearchStatus');
         
-        let searchTimeout;
+        let codeSearchTimeout;
+        let nameSearchTimeout;
         
-        // 統一搜尋邏輯 - 支援股票代碼或名稱
+        // 股票代碼輸入時自動查詢名稱
         codeInput.addEventListener('input', (e) => {
-            clearTimeout(searchTimeout);
-            const query = e.target.value.trim();
+            clearTimeout(codeSearchTimeout);
+            const code = e.target.value.trim().toUpperCase();
             
-            if (query.length >= 2) {
+            if (code.length >= 4) {
                 codeStatus.textContent = '🔍 查詢中...';
                 codeStatus.className = 'search-status loading';
                 
-                searchTimeout = setTimeout(async () => {
+                codeSearchTimeout = setTimeout(async () => {
                     try {
-                        console.log(`統一搜尋: ${query}`);
-                        let stockInfo = null;
-                        
-                        // 判斷輸入是代碼還是名稱
-                        if (/^[0-9]{4,6}[A-Z]*$/.test(query.toUpperCase())) {
-                            // 看起來是股票代碼
-                            stockInfo = await this.searchStockByCode(query.toUpperCase());
-                        } else {
-                            // 看起來是股票名稱
-                            stockInfo = await this.searchStockByName(query);
-                        }
-                        
+                        console.log(`搜尋股票代碼: ${code}`);
+                        const stockInfo = await this.searchStockByCode(code);
                         console.log(`搜尋結果:`, stockInfo);
                         
-                        if (stockInfo && stockInfo.code && stockInfo.name) {
-                            // 自動填入隱藏的名稱欄位
+                        if (stockInfo && stockInfo.name && stockInfo.name !== code) {
                             nameInput.value = stockInfo.name;
-                            
-                            // 顯示搜尋結果，包含股價
-                            let statusText = `✅ ${stockInfo.code} - ${stockInfo.name}`;
-                            if (stockInfo.price) {
-                                statusText += ` (股價: $${stockInfo.price})`;
-                            }
-                            
-                            codeStatus.textContent = statusText;
+                            codeStatus.textContent = `✅ 找到: ${stockInfo.name}`;
                             codeStatus.className = 'search-status success';
+                            nameStatus.textContent = '';
                         } else {
-                            codeStatus.textContent = '❌ 找不到此股票';
+                            codeStatus.textContent = '❌ 找不到此股票代碼';
                             codeStatus.className = 'search-status error';
                         }
                     } catch (error) {
                         console.error('搜尋錯誤:', error);
-                        codeStatus.textContent = '⚠️ 查詢失敗，請重新輸入';
+                        codeStatus.textContent = '⚠️ 查詢失敗，請手動輸入';
                         codeStatus.className = 'search-status error';
                     }
                 }, 800);
@@ -299,120 +284,81 @@ class StockPortfolio {
                 codeStatus.className = 'search-status';
             }
         });
+        
+        // 股票名稱輸入時自動查詢代碼
+        nameInput.addEventListener('input', (e) => {
+            clearTimeout(nameSearchTimeout);
+            const name = e.target.value.trim();
+            
+            if (name.length >= 2) {
+                nameStatus.textContent = '🔍 查詢中...';
+                nameStatus.className = 'search-status loading';
+                
+                nameSearchTimeout = setTimeout(async () => {
+                    try {
+                        const stockInfo = await this.searchStockByName(name);
+                        if (stockInfo.code) {
+                            codeInput.value = stockInfo.code;
+                            nameStatus.textContent = `✅ 找到: ${stockInfo.code}`;
+                            nameStatus.className = 'search-status success';
+                            codeStatus.textContent = '';
+                        } else {
+                            nameStatus.textContent = '❌ 找不到此股票名稱';
+                            nameStatus.className = 'search-status error';
+                        }
+                    } catch (error) {
+                        nameStatus.textContent = '⚠️ 查詢失敗，請手動輸入';
+                        nameStatus.className = 'search-status error';
+                    }
+                }, 800);
+            } else {
+                nameStatus.textContent = '';
+                nameStatus.className = 'search-status';
+            }
+        });
     }
 
     async searchStockByCode(code) {
         console.log(`開始搜尋股票代碼: ${code}`);
         
-        // 1. 優先使用證交所API
-        try {
-            console.log(`嘗試證交所API查詢: ${code}`);
-            const twseResult = await this.stockAPI.getStockPrice(code);
-            if (twseResult && twseResult.price > 0) {
-                // 檢查本地是否有中文名稱
-                const localResult = this.getStockFromLocalDB(code, 'code');
-                console.log(`✅ 證交所API成功: ${code} - 價格: ${twseResult.price}`);
-                return {
-                    code: code,
-                    name: localResult?.name || code, // 優先使用本地中文名稱
-                    price: twseResult.price,
-                    source: 'TWSE'
-                };
-            }
-        } catch (error) {
-            console.warn(`證交所API查詢失敗:`, error.message);
-        }
-        
-        // 2. 使用Yahoo Finance API (透過StockAPI.getStockInfo)
-        try {
-            console.log(`嘗試Yahoo Finance API查詢: ${code}`);
-            const stockInfo = await this.stockAPI.getStockInfo(code);
-            console.log(`Yahoo Finance查詢結果:`, stockInfo);
-            
-            if (stockInfo && stockInfo.name) {
-                // 檢查本地是否有中文名稱
-                const localResult = this.getStockFromLocalDB(code, 'code');
-                console.log(`✅ Yahoo Finance API成功: ${code} - ${stockInfo.name}`);
-                return {
-                    code: code,
-                    name: localResult?.name || stockInfo.name, // 優先使用本地中文名稱
-                    source: 'Yahoo Finance'
-                };
-            }
-        } catch (error) {
-            console.warn(`Yahoo Finance API查詢失敗:`, error.message);
-        }
-        
-        // 3. 使用本地資料庫
+        // 優先使用本地股票資料庫 (更快更準確)
         const localResult = this.getStockFromLocalDB(code, 'code');
         console.log(`本地搜尋結果:`, localResult);
         
         if (localResult && localResult.name) {
-            console.log(`✅ 本地資料庫找到: ${code} - ${localResult.name}`);
-            return {
-                ...localResult,
-                source: '本地資料庫'
-            };
+            return localResult;
         }
         
-        // 4. 如果都找不到，拋出錯誤
-        console.error(`❌ 所有搜尋方法都無法找到股票: ${code}`);
-        throw new Error(`找不到股票代碼 ${code}`);
+        // 如果本地找不到，再嘗試 API 查詢
+        try {
+            console.log(`嘗試 API 查詢: ${code}`);
+            const stockInfo = await this.stockAPI.getStockInfo(code);
+            console.log(`API 查詢結果:`, stockInfo);
+            
+            if (stockInfo && stockInfo.name && stockInfo.name !== code) {
+                return stockInfo;
+            }
+        } catch (error) {
+            console.warn(`API 查詢失敗:`, error);
+        }
+        
+        // 如果都找不到，回傳空結果
+        return { code: null, name: null };
     }
 
     async searchStockByName(name) {
-        console.log(`開始搜尋股票名稱: ${name}`);
-        
-        // 1. 先從本地資料庫找到對應的股票代碼
-        const localResult = this.getStockFromLocalDB(name, 'name');
-        console.log(`本地名稱搜尋結果:`, localResult);
-        
-        if (localResult && localResult.code) {
-            // 找到代碼後，按順序使用API驗證和獲取價格
-            
-            // 1. 優先使用證交所API
-            try {
-                console.log(`用證交所API驗證代碼: ${localResult.code}`);
-                const twseResult = await this.stockAPI.getStockPrice(localResult.code);
-                if (twseResult && twseResult.price > 0) {
-                    console.log(`✅ 證交所API驗證成功: ${localResult.code} - ${localResult.name}`);
-                    return {
-                        ...localResult,
-                        price: twseResult.price,
-                        source: 'TWSE'
-                    };
-                }
-            } catch (error) {
-                console.warn(`證交所API驗證失敗:`, error.message);
+        try {
+            // 先從本地資料庫搜尋
+            const localResult = this.getStockFromLocalDB(name, 'name');
+            if (localResult.code) {
+                return localResult;
             }
             
-            // 2. 使用Yahoo Finance API
-            try {
-                console.log(`用Yahoo Finance API驗證代碼: ${localResult.code}`);
-                const stockInfo = await this.stockAPI.getStockInfo(localResult.code);
-                if (stockInfo && stockInfo.name) {
-                    console.log(`✅ Yahoo Finance API驗證成功: ${localResult.code} - ${localResult.name}`);
-                    return {
-                        ...localResult,
-                        price: stockInfo.price,
-                        source: 'Yahoo Finance'
-                    };
-                }
-            } catch (error) {
-                console.warn(`Yahoo Finance API驗證失敗:`, error.message);
-            }
-            
-            // 3. 如果API都失敗，返回本地結果
-            console.log(`API驗證失敗，返回本地結果: ${localResult.code} - ${localResult.name}`);
-            return {
-                ...localResult,
-                source: '本地資料庫'
-            };
+            // 如果本地找不到，可以擴展為 API 搜尋
+            throw new Error('找不到股票');
+        } catch (error) {
+            return { code: null, name: null };
         }
-        
-        // 4. 如果本地也找不到，拋出錯誤
-        console.error(`❌ 找不到股票名稱: ${name}`);
-        throw new Error(`找不到股票名稱 ${name}`);
     }
 
     getStockFromLocalDB(query, searchType) {
@@ -421,7 +367,6 @@ class StockPortfolio {
             { code: '2330', name: '台積電' },
             { code: '2317', name: '鴻海' },
             { code: '2454', name: '聯發科' },
-            { code: '2301', name: '光寶科' },
             { code: '2881', name: '富邦金' },
             { code: '2882', name: '國泰金' },
             { code: '2883', name: '開發金' },
@@ -451,7 +396,6 @@ class StockPortfolio {
             { code: '00919', name: '群益台灣精選高息' },
             { code: '1101', name: '台泥' },
             { code: '1102', name: '亞泥' },
-            { code: '1104', name: '環泥' },
             { code: '1216', name: '統一' },
             { code: '1301', name: '台塑' },
             { code: '1303', name: '南亞' },
@@ -460,7 +404,6 @@ class StockPortfolio {
             { code: '2207', name: '和泰車' },
             { code: '2303', name: '聯電' },
             { code: '2308', name: '台達電' },
-            { code: '2312', name: '金寶' },
             { code: '2327', name: '國巨' },
             { code: '2357', name: '華碩' },
             { code: '2382', name: '廣達' },
@@ -476,13 +419,9 @@ class StockPortfolio {
             { code: '3045', name: '台灣大' },
             { code: '3481', name: '群創' },
             { code: '4938', name: '和碩' },
-            { code: '4585', name: '達明' },
             { code: '5871', name: '中租-KY' },
             { code: '6415', name: '矽力-KY' },
-            { code: '6589', name: '達廣' },
-            { code: '6669', name: '緯穎' },
-            { code: '6188', name: '廣明' },
-            { code: '6177', name: '達麗' }
+            { code: '6669', name: '緯穎' }
         ];
         
         console.log(`本地資料庫搜尋: ${searchType} = ${query}`);
@@ -1681,27 +1620,24 @@ https://creativecommons.org/licenses/by-nc/4.0/deed.zh_TW
             return;
         }
 
-        // 驗證股票代碼格式 (支援4-6位數字，可含英文字母)
-        if (!/^[0-9]{4,6}[A-Z]*$/.test(formData.code)) {
-            alert('股票代碼格式錯誤，請輸入正確的股票代碼 (例如: 2330, 0050, 00631L)');
+        // 驗證股票代碼格式
+        if (!/^[0-9]{4}[A-Z]*$/.test(formData.code)) {
+            alert('股票代碼格式錯誤，請輸入正確的台股代碼 (例如: 2330, 0050)');
             return;
         }
 
         // 如果沒有填寫股票名稱，嘗試自動獲取
         if (!formData.name) {
             try {
-                console.log(`嘗試自動獲取股票名稱: ${formData.code}`);
                 const stockInfo = await this.searchStockByCode(formData.code);
-                if (stockInfo && stockInfo.name) {
+                if (stockInfo.name) {
                     formData.name = stockInfo.name;
-                    console.log(`✅ 自動獲取股票名稱成功: ${formData.code} - ${stockInfo.name}`);
                 } else {
                     alert('找不到此股票代碼，請手動輸入股票名稱');
                     return;
                 }
             } catch (error) {
-                console.error('自動獲取股票名稱失敗:', error);
-                alert(`找不到股票代碼 ${formData.code}，請確認代碼正確並手動輸入股票名稱`);
+                alert('無法驗證股票代碼，請確認代碼正確並手動輸入股票名稱');
                 return;
             }
         }
@@ -1838,11 +1774,6 @@ https://creativecommons.org/licenses/by-nc/4.0/deed.zh_TW
                 { year: 2023, cashDividend: 70.0, stockDividend: 0, exDate: '2023-06-21' },
                 { year: 2022, cashDividend: 80.0, stockDividend: 0, exDate: '2022-06-22' },
                 { year: 2021, cashDividend: 60.0, stockDividend: 0, exDate: '2021-06-23' }
-            ],
-            '00878': [ // 國泰永續高股息 (資料來源：公開資訊觀測站)
-                { year: 2025, quarter: 'Q1', cashDividend: 0.47, stockDividend: 0, exDate: '2025-05-19' },
-                { year: 2025, quarter: 'Q2', cashDividend: 0.4, stockDividend: 0, exDate: '2025-08-18' },
-                { year: 2025, quarter: 'Q3', cashDividend: 0.4, stockDividend: 0, exDate: '2025-11-18' }
             ]
         };
     }
@@ -1856,27 +1787,20 @@ https://creativecommons.org/licenses/by-nc/4.0/deed.zh_TW
             return;
         }
 
-        console.log(`開始計算 ${stock.code} 的歷史股息...`);
-        console.log(`購買記錄:`, stock.purchaseHistory);
-        console.log(`股息資料:`, stockDividends);
-
         let calculatedDividends = [];
         let totalCalculatedDividends = 0;
 
         // 遍歷每個購買記錄
         stock.purchaseHistory.forEach(purchase => {
             const purchaseDate = new Date(purchase.date);
-            console.log(`檢查購買日期: ${purchase.date} (${purchaseDate})`);
             
             // 找出購買後的所有股息發放
             stockDividends.forEach(dividend => {
                 const exDate = new Date(dividend.exDate);
-                console.log(`  檢查除息日: ${dividend.exDate} (${exDate}), 購買日: ${purchaseDate}`);
                 
                 // 如果除息日在購買日之後，則有資格領取股息
                 if (exDate > purchaseDate) {
                     const cashAmount = purchase.shares * dividend.cashDividend;
-                    console.log(`  ✅ 符合條件！股息金額: ${cashAmount}`);
                     
                     if (cashAmount > 0) {
                         // 檢查是否已經有這筆股息記錄
@@ -1886,33 +1810,26 @@ https://creativecommons.org/licenses/by-nc/4.0/deed.zh_TW
                         
                         if (!existingDividend) {
                             const dividendRecord = {
-                                id: `calc_${stock.id}_${dividend.year}_${dividend.quarter || ''}`,
+                                id: `calc_${stock.id}_${dividend.year}`,
                                 date: dividend.exDate,
                                 type: 'cash',
                                 perShare: dividend.cashDividend,
                                 shares: purchase.shares,
                                 grossAmount: cashAmount,
-                                taxAmount: 0, // 不扣稅
-                                netAmount: cashAmount, // 使用稅前金額
-                                taxRate: 0,
-                                note: `自動計算 - ${dividend.year}年${dividend.quarter || ''}股息`,
+                                taxAmount: cashAmount * 0.1, // 假設10%扣稅
+                                netAmount: cashAmount * 0.9,
+                                taxRate: 10,
+                                note: `自動計算 - ${dividend.year}年股息`,
                                 calculatedFromPurchase: true // 標記為自動計算
                             };
                             
                             calculatedDividends.push(dividendRecord);
                             totalCalculatedDividends += dividendRecord.netAmount;
-                            console.log(`  新增股息記錄:`, dividendRecord);
-                        } else {
-                            console.log(`  ⚠️ 股息記錄已存在，跳過`);
                         }
                     }
-                } else {
-                    console.log(`  ❌ 除息日在購買日之前，不符合條件`);
                 }
             });
         });
-
-        console.log(`計算完成，共 ${calculatedDividends.length} 筆股息`);
 
         if (calculatedDividends.length > 0) {
             // 將計算出的股息加入記錄
@@ -1923,7 +1840,6 @@ https://creativecommons.org/licenses/by-nc/4.0/deed.zh_TW
             if (stock.dividendAdjustment !== false) {
                 const dividendPerShare = stock.totalDividends / stock.shares;
                 stock.adjustedCostPrice = Math.max(0.01, stock.costPrice - dividendPerShare);
-                console.log(`調整後成本價: ${stock.adjustedCostPrice} (原成本價: ${stock.costPrice}, 每股股息: ${dividendPerShare})`);
             }
             
             this.saveData();
@@ -1934,8 +1850,7 @@ https://creativecommons.org/licenses/by-nc/4.0/deed.zh_TW
                   `計算出 ${calculatedDividends.length} 筆股息記錄\n` +
                   `總股息收入：${totalCalculatedDividends.toLocaleString()} 元`);
         } else {
-            console.warn(`${stock.code} 購買日期後無股息發放記錄`);
-            alert(`⚠️ 提示\n\n${stock.name} (${stock.code})\n購買日期後無符合條件的股息記錄`);
+            console.log(`${stock.code} 購買日期後無股息發放記錄`);
         }
     }
 

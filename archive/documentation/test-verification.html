@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>重構驗證測試</title>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .test-item:last-child {
+            border-bottom: none;
+        }
+        .status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .pass { background: #d5f4e6; color: #27ae60; }
+        .fail { background: #ffeaa7; color: #e74c3c; }
+        .pending { background: #e8f4f8; color: #3498db; }
+    </style>
+</head>
+<body>
+    <h1>🔧 系統性重構驗證測試</h1>
+    
+    <div class="test-container">
+        <h2>📋 重構檢查清單</h2>
+        
+        <div class="test-item">
+            <span>CSS衝突消除</span>
+            <span class="status pending" id="css-conflict">待測試</span>
+        </div>
+        
+        <div class="test-item">
+            <span>按鈕間距修正</span>
+            <span class="status pending" id="button-spacing">待測試</span>
+        </div>
+        
+        <div class="test-item">
+            <span>Action按鈕顯示</span>
+            <span class="status pending" id="action-button">待測試</span>
+        </div>
+        
+        <div class="test-item">
+            <span>響應式設計</span>
+            <span class="status pending" id="responsive">待測試</span>
+        </div>
+        
+        <div class="test-item">
+            <span>深色模式</span>
+            <span class="status pending" id="dark-mode">待測試</span>
+        </div>
+        
+        <div class="test-item">
+            <span>股價顯示邏輯</span>
+            <span class="status pending" id="stock-price">待測試</span>
+        </div>
+    </div>
+    
+    <div class="test-container">
+        <h2>🎯 測試說明</h2>
+        <ol>
+            <li><strong>開啟主系統</strong> - 檢查 index.html 是否正常載入</li>
+            <li><strong>檢查按鈕間距</strong> - 確認右上角圖示按鈕不重疊</li>
+            <li><strong>測試Action按鈕</strong> - 點擊操作按鈕確認選單正常顯示</li>
+            <li><strong>驗證響應式</strong> - 調整瀏覽器寬度測試</li>
+            <li><strong>切換深色模式</strong> - 確認樣式正常</li>
+            <li><strong>檢查股價</strong> - 確認股價顯示合理</li>
+        </ol>
+    </div>
+    
+    <div class="test-container">
+        <h2>📊 重構效果對比</h2>
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr style="background: #f8f9fa;">
+                <th style="padding: 10px; border: 1px solid #ddd;">項目</th>
+                <th style="padding: 10px; border: 1px solid #ddd;">重構前</th>
+                <th style="padding: 10px; border: 1px solid #ddd;">重構後</th>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;">CSS規則數量</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">6個衝突定義</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">1個統一定義</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;">!important使用</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">大量濫用</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">完全消除</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;">按鈕間距</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">重疊混亂</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">12px統一間距</td>
+            </tr>
+            <tr>
+                <td style="padding: 10px; border: 1px solid #ddd;">代碼可維護性</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">低</td>
+                <td style="padding: 10px; border: 1px solid #ddd;">高</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="test-container">
+        <h2>✅ 驗證完成後</h2>
+        <p>請確認以下項目都正常後，才進行版本更新：</p>
+        <ul>
+            <li>✅ 按鈕不再重疊</li>
+            <li>✅ Action選單正常顯示</li>
+            <li>✅ 股價顯示合理</li>
+            <li>✅ 深色模式正常</li>
+            <li>✅ 響應式設計正常</li>
+        </ul>
+    </div>
+    
+    <script>
+        // 簡單的測試狀態管理
+        function updateTestStatus(testId, status) {
+            const element = document.getElementById(testId);
+            element.className = `status ${status}`;
+            element.textContent = status === 'pass' ? '通過' : status === 'fail' ? '失敗' : '待測試';
+        }
+        
+        // 可以手動更新測試狀態
+        console.log('使用 updateTestStatus("css-conflict", "pass") 來更新測試狀態');
+    </script>
+</body>
+</html>

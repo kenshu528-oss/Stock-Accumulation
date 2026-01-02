@@ -14,18 +14,18 @@ class StockAPI {
     constructor() {
         this.apiSources = [
             {
-                name: 'TWSE (台灣證交所)',
-                method: this.fetchFromTWSE.bind(this),
-                priority: 1  // 最高優先級
-            },
-            {
                 name: 'Yahoo Finance',
                 method: this.fetchFromYahoo.bind(this),
-                priority: 2
+                priority: 1
             },
             {
                 name: 'Investing.com',
                 method: this.fetchFromInvesting.bind(this),
+                priority: 2
+            },
+            {
+                name: 'TWSE (台灣證交所)',
+                method: this.fetchFromTWSE.bind(this),
                 priority: 3
             }
         ];
@@ -67,7 +67,7 @@ class StockAPI {
         
         const response = await this.fetchWithTimeout(
             corsProxy + encodeURIComponent(yahooUrl),
-            { timeout: 3000 }
+            { timeout: 8000 }
         );
         
         if (!response.ok) {
@@ -137,42 +137,7 @@ class StockAPI {
     }
 
     async fetchFromTWSE(stockCode) {
-        console.log(`證交所API查詢: ${stockCode}`);
-        
-        // 判斷股票類型並使用對應的API
-        const stockType = this.getStockType(stockCode);
-        console.log(`股票類型: ${stockType}`);
-        
-        try {
-            switch (stockType) {
-                case 'listed': // 上市股票
-                    return await this.fetchFromTWSEListed(stockCode);
-                case 'otc': // 上櫃股票
-                    return await this.fetchFromTPEx(stockCode);
-                case 'emerging': // 興櫃股票
-                    return await this.fetchFromEmerging(stockCode);
-                case 'etf': // ETF
-                    return await this.fetchFromETF(stockCode);
-                default:
-                    // 如果無法判斷類型，依序嘗試各個API
-                    return await this.fetchFromAllTWSE(stockCode);
-            }
-        } catch (error) {
-            console.warn(`證交所API查詢失敗: ${error.message}`);
-            throw error;
-        }
-    }
-    
-    getStockType(stockCode) {
-        // 根據股票代碼判斷類型
-        if (stockCode.match(/^00\d+/)) return 'etf'; // ETF
-        if (stockCode.match(/^[1-9]\d{3}$/)) return 'listed'; // 上市股票 (1000-9999)
-        if (stockCode.match(/^[4-8]\d{3}$/)) return 'otc'; // 上櫃股票 (4000-8999)
-        return 'unknown';
-    }
-    
-    async fetchFromTWSEListed(stockCode) {
-        // 上市股票API
+        // 台灣證交所即時報價 (僅限交易時間)
         const today = new Date();
         const dateStr = today.getFullYear() + 
                        String(today.getMonth() + 1).padStart(2, '0') + 
@@ -180,7 +145,7 @@ class StockAPI {
         
         const twseUrl = `https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=${dateStr}&stockNo=${stockCode}`;
         
-        const response = await this.fetchWithTimeout(twseUrl, { timeout: 3000 });
+        const response = await this.fetchWithTimeout(twseUrl, { timeout: 10000 });
         
         if (!response.ok) {
             throw new Error(`TWSE API 錯誤: ${response.status}`);
@@ -205,153 +170,8 @@ class StockAPI {
             volume: parseInt(latestData[1].replace(/,/g, '')),
             high: parseFloat(latestData[4].replace(/,/g, '')),
             low: parseFloat(latestData[5].replace(/,/g, '')),
-            open: parseFloat(latestData[3].replace(/,/g, '')),
-            market: 'TWSE'
+            open: parseFloat(latestData[3].replace(/,/g, ''))
         };
-    }
-    
-    async fetchFromTPEx(stockCode) {
-        // 上櫃股票API (櫃買中心)
-        const today = new Date();
-        const dateStr = today.getFullYear() + '/' + 
-                       String(today.getMonth() + 1).padStart(2, '0') + '/' + 
-                       String(today.getDate()).padStart(2, '0');
-        
-        const tpexUrl = `https://www.tpex.org.tw/web/stock/aftertrading/daily_close_quotes/stk_quote_result.php?l=zh-tw&d=${dateStr}&stkno=${stockCode}`;
-        
-        const response = await this.fetchWithTimeout(tpexUrl, { timeout: 10000 });
-        
-        if (!response.ok) {
-            throw new Error(`TPEx API 錯誤: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        if (!data.aaData || data.aaData.length === 0) {
-            throw new Error('TPEx 無資料或股票代碼錯誤');
-        }
-        
-        const stockData = data.aaData[0];
-        const closePrice = parseFloat(stockData[2]);
-        
-        if (isNaN(closePrice) || closePrice <= 0) {
-            throw new Error('無效的價格資料');
-        }
-        
-        return {
-            price: closePrice,
-            volume: parseInt(stockData[7].replace(/,/g, '')),
-            market: 'TPEx'
-        };
-    }
-    
-    async fetchFromEmerging(stockCode) {
-        // 興櫃股票API
-        try {
-            // 興櫃股票通常也在櫃買中心的系統中
-            return await this.fetchFromTPEx(stockCode);
-        } catch (error) {
-            throw new Error(`興櫃股票查詢失敗: ${error.message}`);
-        }
-    }
-    
-    async fetchFromETF(stockCode) {
-        // ETF API - 通常在上市或上櫃
-        try {
-            // 先嘗試上市ETF
-            return await this.fetchFromTWSEListed(stockCode);
-        } catch (error) {
-            // 再嘗試上櫃ETF
-            return await this.fetchFromTPEx(stockCode);
-        }
-    }
-    
-    async fetchFromAllTWSE(stockCode) {
-        // 依序嘗試所有證交所API
-        const apis = [
-            { name: '上市', method: this.fetchFromTWSEListed.bind(this) },
-            { name: '上櫃', method: this.fetchFromTPEx.bind(this) },
-            { name: '興櫃', method: this.fetchFromEmerging.bind(this) }
-        ];
-        
-        for (const api of apis) {
-            try {
-                console.log(`嘗試${api.name}API: ${stockCode}`);
-                const result = await api.method(stockCode);
-                if (result && result.price > 0) {
-                    console.log(`✅ ${api.name}API成功: ${stockCode}`);
-                    return result;
-                }
-            } catch (error) {
-                console.warn(`❌ ${api.name}API失敗: ${error.message}`);
-                continue;
-            }
-        }
-        
-        throw new Error('所有證交所API都無法找到此股票');
-    }
-
-    // 獲取股票基本資訊
-    async getStockInfo(stockCode) {
-        console.log(`獲取股票資訊: ${stockCode}`);
-        
-        try {
-            // 先嘗試從證交所獲取價格資料
-            const priceData = await this.getStockPrice(stockCode);
-            
-            return {
-                code: stockCode,
-                name: this.getStockName(stockCode),
-                price: priceData.price,
-                source: priceData.source,
-                exchange: 'TPE',
-                type: this.getStockType(stockCode),
-                currency: 'TWD'
-            };
-        } catch (error) {
-            console.warn('獲取股票資訊失敗，返回基本資訊:', error);
-            return {
-                code: stockCode,
-                name: this.getStockName(stockCode),
-                exchange: 'TPE',
-                type: this.getStockType(stockCode),
-                currency: 'TWD'
-            };
-        }
-    }
-
-    // 股票名稱對照表
-    getStockName(stockCode) {
-        const nameMap = {
-            '2330': '台積電',
-            '2317': '鴻海',
-            '2454': '聯發科',
-            '2881': '富邦金',
-            '2882': '國泰金',
-            '2883': '開發金',
-            '2884': '玉山金',
-            '2885': '元大金',
-            '2886': '兆豐金',
-            '2887': '台新金',
-            '2890': '永豐金',
-            '2891': '中信金',
-            '2892': '第一金',
-            '0050': '元大台灣50',
-            '0056': '元大高股息',
-            '00878': '國泰永續高股息',
-            '00631L': '元大台灣50正2',
-            '00632R': '元大台灣50反1',
-            '1101': '台泥',
-            '1216': '統一',
-            '1301': '台塑',
-            '1303': '南亞',
-            '2002': '中鋼',
-            '2303': '聯電',
-            '2308': '台達電',
-            '2412': '中華電'
-        };
-        
-        return nameMap[stockCode] || stockCode;
     }
 
     formatTaiwanSymbol(stockCode) {
