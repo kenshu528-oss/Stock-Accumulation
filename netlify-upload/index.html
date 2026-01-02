@@ -7,7 +7,7 @@
 詳細授權條款請參閱 LICENSE 檔案
 
 作者：徐國洲
-版本：v1.2.2.0
+版本：v1.2.2.0008
 建立日期：2025-12-24
 -->
 <html lang="zh-TW">
@@ -21,7 +21,7 @@
     <div class="container">
         <header>
             <div class="header-top">
-                <h1>存股紀錄系統 <small id="versionInfo" class="version-tag">v1.2.2.0</small></h1>
+                <h1>存股紀錄系統 <small id="versionInfo" class="version-tag">v1.2.2.0008</small></h1>
                 <div class="copyright-info">
                     <small>© 2025 徐國洲 | CC BY-NC 4.0 License | <a href="#" onclick="portfolio.showCopyrightInfo()">版權資訊</a></small>
                 </div>
@@ -130,11 +130,11 @@
                 <h3>新增股票</h3>
                 <form id="addStockForm">
                     <div class="form-group">
-                        <label for="stockCode">股票代碼:</label>
-                        <input type="text" id="stockCode" required placeholder="例如: 2330, 0050">
+                        <label for="stockCode">請輸入股號或名稱:</label>
+                        <input type="text" id="stockCode" required placeholder="例如: 2330、台積電、達明">
                         <div class="search-status" id="codeSearchStatus"></div>
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" style="display: none;">
                         <label for="stockName">股票名稱:</label>
                         <input type="text" id="stockName" placeholder="例如: 台積電 (可自動查詢)">
                         <div class="search-status" id="nameSearchStatus"></div>
