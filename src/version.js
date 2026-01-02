@@ -12,7 +12,7 @@
 // 版本管理系統
 class VersionManager {
     constructor() {
-        this.currentVersion = 'v1.2.2.0034';
+        this.currentVersion = 'v1.2.2.0035';
         this.versionHistory = [
             {
                 version: '1.0.0.0',
@@ -296,6 +296,18 @@ class VersionManager {
                     '新增詳細的股息計算除錯日誌',
                     '修正股息計算錯誤問題',
                     '1000股 × 1.27元 = 1,270元（正確）'
+                ]
+            },
+            {
+                version: '1.2.2.0035',
+                date: '2025-01-02',
+                features: [
+                    '實作版本隔離：修改LocalStorage Key為stockPortfolio_v1.2',
+                    '新增自動資料遷移功能',
+                    '檢測舊版資料並自動遷移到新版key',
+                    '備份舊版資料為stockPortfolio_backup',
+                    '確保新舊版本資料完全隔離',
+                    '為v1.3.X版本做準備'
                 ]
             }
         ];

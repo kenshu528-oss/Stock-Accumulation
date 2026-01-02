@@ -12,7 +12,7 @@
  * ⚠️ IMPORTANT: Commercial use is strictly prohibited!
  * 
  * 作者：徐國洲
- * 版本：v1.2.2.0034
+ * 版本：v1.2.2.0035
  * 建立日期：2025-12-24
  * 
  * 功能：
@@ -53,7 +53,7 @@ class StockPortfolio {
 
     init() {
         // 只在沒有儲存資料時初始化空的資料結構
-        const saved = localStorage.getItem('stockPortfolio');
+        const saved = localStorage.getItem('stockPortfolio_v1.2');
         if (!saved) {
             console.log('首次使用，初始化空的投資組合');
             this.stocks = []; // 不建立任何預設股票
@@ -1039,7 +1039,7 @@ class StockPortfolio {
     }
 
     showDebugInfo() {
-        const saved = localStorage.getItem('stockPortfolio');
+        const saved = localStorage.getItem('stockPortfolio_v1.2');
         let debugInfo = '🔍 除錯資訊\n\n';
         
         debugInfo += `目前記憶體狀態:\n`;
@@ -2725,7 +2725,7 @@ https://creativecommons.org/licenses/by-nc/4.0/deed.zh_TW
         
         try {
             // 儲存到本地
-            localStorage.setItem('stockPortfolio', JSON.stringify(data));
+            localStorage.setItem('stockPortfolio_v1.2', JSON.stringify(data));
             console.log('✅ 資料已儲存到本地', {
                 stocks: this.stocks.length,
                 accounts: this.accounts.length,
@@ -2749,7 +2749,10 @@ https://creativecommons.org/licenses/by-nc/4.0/deed.zh_TW
     }
 
     loadData() {
-        const saved = localStorage.getItem('stockPortfolio');
+        // 檢查是否有舊版資料需要遷移
+        this.migrateOldData();
+        
+        const saved = localStorage.getItem('stockPortfolio_v1.2');
         if (saved) {
             try {
                 const data = JSON.parse(saved);
@@ -2773,6 +2776,32 @@ https://creativecommons.org/licenses/by-nc/4.0/deed.zh_TW
         setTimeout(() => {
             this.refreshStockPrices();
         }, 1000);
+    }
+
+    migrateOldData() {
+        // 檢測舊版資料 (v1.2.0034之前的版本)
+        const oldData = localStorage.getItem('stockPortfolio');
+        const newData = localStorage.getItem('stockPortfolio_v1.2');
+        
+        if (oldData && !newData) {
+            console.log('🔄 偵測到舊版資料，開始遷移...');
+            
+            try {
+                // 備份舊版資料
+                localStorage.setItem('stockPortfolio_backup', oldData);
+                
+                // 遷移到新版key
+                localStorage.setItem('stockPortfolio_v1.2', oldData);
+                
+                console.log('✅ 資料遷移成功！');
+                alert('✅ 系統已自動遷移您的資料到新版本 (v1.2.X)\n\n舊版資料已備份為 stockPortfolio_backup\n不會影響您的使用');
+                
+                // 不刪除舊版資料，保留作為備份
+            } catch (error) {
+                console.error('❌ 資料遷移失敗:', error);
+                alert('⚠️ 資料遷移失敗，請聯絡技術支援');
+            }
+        }
     }
 }
 
