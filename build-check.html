@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>v1.3.X 建置檢查工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .step {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .step h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .checklist li {
+            padding: 10px;
+            margin-bottom: 8px;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid #28a745;
+        }
+        
+        .checklist li:before {
+            content: "✓ ";
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 13px;
+            border-top: 1px solid #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏗️ v1.3.X 建置與部署指引</h1>
+            <p>準備測試版本的完整步驟</p>
+        </div>
+        
+        <div class="content">
+            <div class="alert alert-info">
+                <strong>📋 部署目標</strong><br>
+                建立 v1.3.X 的獨立測試站點，不影響現有的 v1.2.X 生產版本
+            </div>
+            
+            <div class="step">
+                <h2>🔧 步驟 1：建置專案</h2>
+                <p>在專案根目錄執行以下命令：</p>
+                
+                <div class="code-block">
+# 確保在正確目錄
+cd "C:\Users\ken.xu\Documents\kiro\Stock Accumulation"
+
+# 安裝依賴（如果尚未安裝）
+npm install
+
+# 建置專案
+npm run build
+                </div>
+                
+                <div class="alert alert-warning">
+                    <strong>⚠️ 注意事項</strong><br>
+                    • 確保 Node.js 已安裝並在 PATH 中<br>
+                    • 建置過程需要幾分鐘時間<br>
+                    • 建置完成後會產生 dist/ 資料夾
+                </div>
+            </div>
+            
+            <div class="step">
+                <h2>📁 步驟 2：確認建置結果</h2>
+                <p>建置完成後，dist/ 資料夾應包含以下檔案：</p>
+                
+                <ul class="checklist">
+                    <li>index.html - 主頁面</li>
+                    <li>js/ - JavaScript 檔案</li>
+                    <li>css/ - 樣式檔案</li>
+                    <li>assets/ - 靜態資源</li>
+                    <li>favicon.svg - 網站圖示</li>
+                </ul>
+                
+                <div class="alert alert-success">
+                    <strong>✅ 檢查方式</strong><br>
+                    開啟檔案總管，確認 dist/ 資料夾存在且包含上述檔案
+                </div>
+            </div>
+            
+            <div class="step">
+                <h2>🌐 步驟 3：部署到 Netlify</h2>
+                <p>使用 Netlify Drop 進行手動部署：</p>
+                
+                <ol style="margin-left: 20px; margin-top: 10px;">
+                    <li>前往 <a href="https://app.netlify.com/" target="_blank">Netlify Dashboard</a></li>
+                    <li>點擊 <strong>"Add new site"</strong></li>
+                    <li>選擇 <strong>"Deploy manually"</strong></li>
+                    <li>將整個 <strong>dist/</strong> 資料夾拖拽到部署區域</li>
+                    <li>等待部署完成（約 1-2 分鐘）</li>
+                    <li>取得測試網址</li>
+                </ol>
+                
+                <div class="alert alert-info">
+                    <strong>💡 建議設定</strong><br>
+                    • 站點名稱：stock-portfolio-v13-test<br>
+                    • 自訂網域：stock-portfolio-v13-test.netlify.app<br>
+                    • 這樣測試人員容易記住網址
+                </div>
+            </div>
+            
+            <div class="step">
+                <h2>📋 步驟 4：測試驗證</h2>
+                <p>部署完成後，請先自行測試：</p>
+                
+                <ul class="checklist">
+                    <li>頁面正常載入，顯示 v1.3.0.0001 版本</li>
+                    <li>可以新增帳戶和股票</li>
+                    <li>股價 API 正常運作</li>
+                    <li>資料儲存功能正常</li>
+                    <li>無 JavaScript 錯誤</li>
+                </ul>
+            </div>
+            
+            <div class="step">
+                <h2>👥 步驟 5：提供給測試人員</h2>
+                <p>準備以下資料給測試人員：</p>
+                
+                <ul class="checklist">
+                    <li>測試網址：https://your-site-name.netlify.app</li>
+                    <li>測試指引：TESTING_GUIDE_V13.md</li>
+                    <li>版本說明：v1.3.X 新功能列表</li>
+                    <li>聯絡方式：問題回報管道</li>
+                </ul>
+                
+                <div class="alert alert-success">
+                    <strong>🔒 安全保證</strong><br>
+                    • 現有 v1.2.X 版本不受影響<br>
+                    • 資料完全隔離（不同 LocalStorage 鍵值）<br>
+                    • 可同時使用兩個版本<br>
+                    • 測試有問題可立即下線
+                </div>
+            </div>
+            
+            <div class="step">
+                <h2>🚨 緊急處理</h2>
+                <p>如果測試過程中發現嚴重問題：</p>
+                
+                <div class="code-block">
+# 方法 1：在 Netlify Dashboard 中暫停站點
+# 方法 2：刪除測試站點
+# 方法 3：回退到 v1.2.X 版本
+                </div>
+                
+                <div class="alert alert-warning">
+                    <strong>⚠️ 重要提醒</strong><br>
+                    測試版本僅供功能驗證，不建議用於正式投資記錄
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            v1.3.0.0001 建置指引 | © 2025 徐國洲 | CC BY-NC 4.0 License
+        </div>
+    </div>
+</body>
+</html>

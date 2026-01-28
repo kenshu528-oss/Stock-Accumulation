@@ -12,7 +12,7 @@
  * ⚠️ IMPORTANT: Commercial use is strictly prohibited!
  * 
  * 作者：徐國洲
- * 版本：v1.2.2.0035
+ * 版本：v1.2.2.0041
  * 建立日期：2025-12-24
  * 
  * 功能：
@@ -199,13 +199,15 @@ class StockPortfolio {
             }
         });
 
-        // 定期更新股價 (每30秒)
-        this.autoRefreshInterval = setInterval(() => {
-            // 只有在沒有開啟 modal 時才自動更新
-            if (!this.isModalOpen()) {
-                this.refreshStockPrices();
-            }
-        }, 30000);
+        // 移除自動更新功能，改為完全手動觸發
+        // this.autoRefreshInterval = setInterval(() => {
+        //     if (!this.isModalOpen()) {
+        //         console.log('🔄 自動更新股價...');
+        //         this.refreshStockPrices();
+        //     }
+        // }, 300000);
+        
+        console.log('📋 股價更新已設為手動模式，請點擊「更新股價」按鈕進行更新');
     }
 
     isModalOpen() {
@@ -1687,10 +1689,16 @@ https://creativecommons.org/licenses/by-nc/4.0/deed.zh_TW
             return;
         }
 
-        // 如果沒有填寫股票名稱，嘗試自動獲取
-        if (!formData.name) {
-            try {
-                console.log(`嘗試自動獲取股票名稱: ${formData.code}`);
+        // 顯示載入狀態
+        const submitBtn = document.querySelector('#addStockForm button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = '驗證股票中...';
+        submitBtn.disabled = true;
+
+        try {
+            // 如果沒有填寫股票名稱，嘗試自動獲取
+            if (!formData.name) {
+                console.log(`嘗試自動獲取股票資訊: ${formData.code}`);
                 const stockInfo = await this.searchStockByCode(formData.code);
                 if (stockInfo && stockInfo.name) {
                     formData.name = stockInfo.name;
@@ -1699,67 +1707,116 @@ https://creativecommons.org/licenses/by-nc/4.0/deed.zh_TW
                     alert('找不到此股票代碼，請手動輸入股票名稱');
                     return;
                 }
-            } catch (error) {
-                console.error('自動獲取股票名稱失敗:', error);
-                alert(`找不到股票代碼 ${formData.code}，請確認代碼正確並手動輸入股票名稱`);
-                return;
             }
-        }
 
-        // 檢查是否已有相同股票，如果有則詢問是否要合併或新增
-        const existingStock = this.stocks.find(stock => 
-            stock.code === formData.code && stock.account === formData.account
-        );
+            // 使用即時API驗證股票代碼並獲取當前股價
+            submitBtn.textContent = '獲取即時股價中...';
+            let currentPrice = formData.costPrice; // 預設使用成本價
+            let priceSource = '手動輸入';
+            
+            try {
+                console.log(`🔄 使用即時API獲取 ${formData.code} 股價...`);
+                const priceResult = await this.stockAPI.getStockPrice(formData.code);
+                
+                if (priceResult && priceResult.price > 0) {
+                    currentPrice = priceResult.price;
+                    priceSource = priceResult.source;
+                    console.log(`✅ 即時股價獲取成功: ${formData.code} = ${currentPrice} (來源: ${priceSource})`);
+                    
+                    // 顯示股價資訊給用戶確認
+                    const priceInfo = `股票驗證成功！\n\n` +
+                                    `股票：${formData.name} (${formData.code})\n` +
+                                    `目前股價：${currentPrice} 元\n` +
+                                    `您的成本價：${formData.costPrice} 元\n` +
+                                    `資料來源：${priceSource}\n\n` +
+                                    `確定要新增這支股票嗎？`;
+                    
+                    if (!confirm(priceInfo)) {
+                        return;
+                    }
+                } else {
+                    console.warn(`⚠️ 無法獲取 ${formData.code} 的即時股價，使用成本價`);
+                }
+            } catch (priceError) {
+                console.warn(`❌ 即時股價獲取失敗: ${priceError.message}`);
+                
+                // 即時股價失敗時，仍然允許新增，但給予警告
+                const warningMsg = `無法獲取 ${formData.code} 的即時股價。\n\n` +
+                                 `可能原因：\n` +
+                                 `• 股票代碼不存在\n` +
+                                 `• 網路連線問題\n` +
+                                 `• API暫時無法使用\n\n` +
+                                 `是否仍要新增此股票？（將使用您輸入的成本價作為目前股價）`;
+                
+                if (!confirm(warningMsg)) {
+                    return;
+                }
+            }
 
-        if (existingStock) {
-            const choice = confirm(
-                `此帳戶已有 ${formData.name} (${formData.code}) 的紀錄。\n\n` +
-                `現有：${existingStock.shares} 股，成本價 ${existingStock.costPrice}\n` +
-                `新增：${formData.shares} 股，成本價 ${formData.costPrice}\n\n` +
-                `點擊「確定」合併為一筆記錄\n` +
-                `點擊「取消」新增為獨立記錄`
+            // 檢查是否已有相同股票，如果有則詢問是否要合併或新增
+            const existingStock = this.stocks.find(stock => 
+                stock.code === formData.code && stock.account === formData.account
             );
 
-            if (choice) {
-                // 合併到現有記錄
-                this.mergeStockPurchase(existingStock, formData);
-                this.closeModals();
-                return;
-            } else {
-                // 新增為獨立記錄，修改ID以避免衝突
-                formData.id = Date.now() + Math.random();
+            if (existingStock) {
+                const choice = confirm(
+                    `此帳戶已有 ${formData.name} (${formData.code}) 的紀錄。\n\n` +
+                    `現有：${existingStock.shares} 股，成本價 ${existingStock.costPrice}\n` +
+                    `新增：${formData.shares} 股，成本價 ${formData.costPrice}\n\n` +
+                    `點擊「確定」合併為一筆記錄\n` +
+                    `點擊「取消」新增為獨立記錄`
+                );
+
+                if (choice) {
+                    // 合併到現有記錄
+                    this.mergeStockPurchase(existingStock, formData);
+                    this.closeModals();
+                    return;
+                } else {
+                    // 新增為獨立記錄，修改ID以避免衝突
+                    formData.id = Date.now() + Math.random();
+                }
             }
+
+            // 新增股票
+            const newStock = {
+                id: formData.id || Date.now(),
+                ...formData,
+                currentPrice: currentPrice, // 使用即時股價或成本價
+                lastUpdate: new Date(),
+                error: null,
+                source: priceSource,
+                dividends: [], // 股息記錄
+                totalDividends: 0, // 累計股息收入
+                adjustedCostPrice: formData.costPrice, // 調整後成本價
+                dividendAdjustment: true, // 是否啟用股息調整成本價
+                purchaseHistory: [{ // 購買歷史記錄
+                    date: formData.purchaseDate,
+                    shares: formData.shares,
+                    costPrice: formData.costPrice,
+                    amount: formData.shares * formData.costPrice
+                }]
+            };
+
+            this.stocks.push(newStock);
+            this.saveData();
+            this.renderStocks();
+            this.closeModals();
+            
+            // 自動計算應得股息
+            this.calculateHistoricalDividends(newStock);
+            
+            console.log(`✅ 股票新增成功: ${formData.code} ${formData.name}`);
+            alert(`✅ 股票新增成功！\n${formData.name} (${formData.code})\n目前股價：${currentPrice} 元`);
+
+        } catch (error) {
+            console.error('新增股票失敗:', error);
+            alert(`新增股票失敗：${error.message}`);
+        } finally {
+            // 恢復按鈕狀態
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
         }
-
-        // 新增股票
-        const newStock = {
-            id: formData.id || Date.now(),
-            ...formData,
-            currentPrice: formData.costPrice, // 初始使用成本價
-            lastUpdate: null,
-            error: null,
-            dividends: [], // 股息記錄
-            totalDividends: 0, // 累計股息收入
-            adjustedCostPrice: formData.costPrice, // 調整後成本價
-            dividendAdjustment: true, // 是否啟用股息調整成本價
-            purchaseHistory: [{ // 購買歷史記錄
-                date: formData.purchaseDate,
-                shares: formData.shares,
-                costPrice: formData.costPrice,
-                amount: formData.shares * formData.costPrice
-            }]
-        };
-
-        this.stocks.push(newStock);
-        this.saveData();
-        this.renderStocks();
-        this.closeModals();
-        
-        // 立即更新新股票的價格
-        this.updateStockPrice(newStock);
-        
-        // 自動計算應得股息
-        this.calculateHistoricalDividends(newStock);
     }
 
     mergeStockPurchase(existingStock, newPurchase) {
@@ -2036,7 +2093,18 @@ https://creativecommons.org/licenses/by-nc/4.0/deed.zh_TW
         refreshBtn.innerHTML = '<span class="loading"></span> 更新中...';
         refreshBtn.disabled = true;
 
-        const promises = this.stocks.map(stock => this.updateStockPrice(stock));
+        console.log(`🔄 開始更新 ${this.stocks.length} 支股票的股價...`);
+        
+        // 去除重複的股票代碼，避免重複更新
+        const uniqueStocks = this.stocks.filter((stock, index, self) => 
+            index === self.findIndex(s => s.code === stock.code)
+        );
+        
+        if (uniqueStocks.length !== this.stocks.length) {
+            console.warn(`⚠️ 發現重複股票，原有 ${this.stocks.length} 支，去重後 ${uniqueStocks.length} 支`);
+        }
+
+        const promises = uniqueStocks.map(stock => this.updateStockPrice(stock));
         await Promise.all(promises);
 
         refreshBtn.innerHTML = '更新股價';
@@ -2044,6 +2112,8 @@ https://creativecommons.org/licenses/by-nc/4.0/deed.zh_TW
         
         this.renderStocks();
         this.updateLastUpdateTime();
+        
+        console.log(`✅ 股價更新完成`);
     }
 
     async updateStockPrice(stock) {
@@ -2066,7 +2136,7 @@ https://creativecommons.org/licenses/by-nc/4.0/deed.zh_TW
             console.log(`✅ ${stock.code} 股價更新成功: $${result.price} (來源: ${result.source})`);
             
         } catch (error) {
-            console.error(`❌ 更新股價失敗: ${stock.code}`, error);
+            console.warn(`❌ 更新股價失敗: ${stock.code} - ${error.message}`);
             stock.error = error.message;
             
             // 如果是第一次載入且沒有歷史價格，使用成本價作為預設值
@@ -2075,8 +2145,7 @@ https://creativecommons.org/licenses/by-nc/4.0/deed.zh_TW
                 console.warn(`${stock.code} 使用成本價作為預設值`);
             }
             
-            // 拋出錯誤讓調用者知道失敗了
-            throw error;
+            // 不要拋出錯誤，讓其他股票繼續更新
         } finally {
             this.updateStockLoadingState(stock.id, false);
         }
@@ -2772,10 +2841,12 @@ https://creativecommons.org/licenses/by-nc/4.0/deed.zh_TW
         this.updateAccountTabs();
         this.renderStocks();
         
-        // 載入後立即更新一次股價
-        setTimeout(() => {
-            this.refreshStockPrices();
-        }, 1000);
+        // 移除自動更新功能，改為完全手動觸發
+        // setTimeout(() => {
+        //     this.refreshStockPrices();
+        // }, 1000);
+        
+        console.log('📋 系統已載入，股價更新需手動點擊「更新股價」按鈕');
     }
 
     migrateOldData() {

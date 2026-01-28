@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<!--
+存股紀錄系統 (Stock Portfolio System) - 開發測試版本
+版權所有 (c) 2025 徐國洲
+
+本檔案用於在沒有 Node.js 的環境下測試 v1.3.X 架構
+使用編譯後的 JavaScript 檔案
+
+版本：v1.3.0.0001
+-->
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>存股紀錄系統 v1.3.0 - 開發測試版</title>
+    <link rel="stylesheet" href="src/styles.css">
+    <style>
+        .dev-banner {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .dev-banner small {
+            display: block;
+            margin-top: 5px;
+            opacity: 0.9;
+            font-weight: normal;
+        }
+        
+        .test-panel {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px;
+        }
+        
+        .test-panel h3 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+        
+        .test-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .test-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+        
+        .console-output {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        
+        .console-output .log {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #667eea;
+            padding-left: 10px;
+        }
+        
+        .console-output .success {
+            border-left-color: #28a745;
+            color: #a8e6a8;
+        }
+        
+        .console-output .error {
+            border-left-color: #dc3545;
+            color: #f8a8a8;
+        }
+        
+        .console-output .warning {
+            border-left-color: #ffc107;
+            color: #ffe8a8;
+        }
+    </style>
+</head>
+<body>
+    <div class="dev-banner">
+        ⚠️ 開發測試版本 - v1.3.0.0001
+        <small>此版本使用舊版 JavaScript 檔案進行測試，完整功能請使用 npm run dev</small>
+    </div>
+    
+    <div class="test-panel">
+        <h3>🧪 v1.3.X 架構測試面板</h3>
+        <p style="margin-bottom: 15px; color: #666;">
+            由於瀏覽器無法直接執行 TypeScript，此版本暫時使用 v1.2.X 的 JavaScript 檔案進行基礎測試。
+        </p>
+        
+        <div>
+            <button class="test-btn" onclick="testBasicFunctions()">測試基礎功能</button>
+            <button class="test-btn" onclick="testStorage()">測試儲存功能</button>
+            <button class="test-btn" onclick="testMigration()">測試資料遷移</button>
+            <button class="test-btn" onclick="clearConsole()">清除輸出</button>
+        </div>
+        
+        <div class="console-output" id="consoleOutput">
+            <div class="log">等待測試...</div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <h1>存股紀錄系統 <small id="versionInfo" class="version-tag">v1.3.0.0001 (測試版)</small></h1>
+                <div class="copyright-info">
+                    <small>© 2025 徐國洲 | CC BY-NC 4.0 License</small>
+                </div>
+            </div>
+            <div class="summary-panel">
+                <div class="total-value">
+                    <h2>總市值: <span id="totalValue">$0</span></h2>
+                </div>
+                <div class="last-update">
+                    最後更新: <span id="lastUpdate">--</span>
+                </div>
+            </div>
+        </header>
+
+        <main>
+            <div class="controls">
+                <button id="testArchitectureBtn" class="btn btn-primary">測試 v1.3.X 架構</button>
+                <button id="showInfoBtn" class="btn btn-secondary">顯示架構資訊</button>
+            </div>
+
+            <div class="stock-table-container">
+                <table class="stock-table">
+                    <thead>
+                        <tr>
+                            <th>功能</th>
+                            <th>狀態</th>
+                            <th>說明</th>
+                        </tr>
+                    </thead>
+                    <tbody id="featureTable">
+                        <tr>
+                            <td>TypeScript 架構</td>
+                            <td>✅ 已建立</td>
+                            <td>所有 .ts 檔案已完成</td>
+                        </tr>
+                        <tr>
+                            <td>管理器層</td>
+                            <td>✅ 已實作</td>
+                            <td>Stock, Account, Dividend, Portfolio</td>
+                        </tr>
+                        <tr>
+                            <td>服務層</td>
+                            <td>✅ 已實作</td>
+                            <td>Storage, Migration, StockApi</td>
+                        </tr>
+                        <tr>
+                            <td>應用程式入口</td>
+                            <td>✅ 已完成</td>
+                            <td>main.ts 已建立</td>
+                        </tr>
+                        <tr>
+                            <td>直接開啟測試</td>
+                            <td>⚠️ 受限</td>
+                            <td>需要編譯或使用開發伺服器</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- 暫時使用舊版 JavaScript 進行基礎測試 -->
+    <script src="src/version.js"></script>
+    <script src="src/stock-api.js"></script>
+    
+    <script>
+        // 模擬 v1.3.X 架構的基礎測試
+        const consoleOutput = document.getElementById('consoleOutput');
+        
+        function log(message, type = 'log') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            consoleOutput.appendChild(div);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+        
+        function clearConsole() {
+            consoleOutput.innerHTML = '<div class="log">輸出已清除</div>';
+        }
+        
+        function testBasicFunctions() {
+            log('開始測試基礎功能...', 'log');
+            
+            // 測試 LocalStorage
+            try {
+                localStorage.setItem('test', 'value');
+                localStorage.removeItem('test');
+                log('✓ LocalStorage 可用', 'success');
+            } catch (e) {
+                log('✗ LocalStorage 不可用: ' + e.message, 'error');
+            }
+            
+            // 測試版本資訊
+            if (typeof VERSION !== 'undefined') {
+                log(`✓ 版本資訊: ${VERSION.current}`, 'success');
+            } else {
+                log('⚠ 版本資訊未載入', 'warning');
+            }
+            
+            log('基礎功能測試完成', 'success');
+        }
+        
+        function testStorage() {
+            log('開始測試儲存功能...', 'log');
+            
+            // 測試 v1.3.X 儲存鍵值
+            const testData = {
+                version: '1.3.0',
+                stocks: [],
+                accounts: [],
+                dividends: [],
+                metadata: {
+                    createdAt: new Date().toISOString(),
+                    lastModified: new Date().toISOString()
+                }
+            };
+            
+            try {
+                localStorage.setItem('stockPortfolio_v1.3', JSON.stringify(testData));
+                log('✓ v1.3.X 資料寫入成功', 'success');
+                
+                const loaded = JSON.parse(localStorage.getItem('stockPortfolio_v1.3'));
+                log(`✓ v1.3.X 資料讀取成功: 版本 ${loaded.version}`, 'success');
+                
+                localStorage.removeItem('stockPortfolio_v1.3');
+                log('✓ 測試資料已清除', 'success');
+            } catch (e) {
+                log('✗ 儲存測試失敗: ' + e.message, 'error');
+            }
+        }
+        
+        function testMigration() {
+            log('開始測試資料遷移檢測...', 'log');
+            
+            // 檢查是否有舊版資料
+            const hasV12 = localStorage.getItem('stockPortfolio_v1.2') !== null;
+            const hasV13 = localStorage.getItem('stockPortfolio_v1.3') !== null;
+            
+            log(`v1.2.X 資料: ${hasV12 ? '存在' : '不存在'}`, hasV12 ? 'success' : 'log');
+            log(`v1.3.X 資料: ${hasV13 ? '存在' : '不存在'}`, hasV13 ? 'success' : 'log');
+            
+            if (hasV12 && !hasV13) {
+                log('⚠ 偵測到需要遷移的資料', 'warning');
+                log('提示：使用完整版本（npm run dev）可執行自動遷移', 'log');
+            } else if (hasV13) {
+                log('✓ v1.3.X 資料已存在', 'success');
+            } else {
+                log('✓ 無現有資料，可從空白狀態開始', 'success');
+            }
+        }
+        
+        // 按鈕事件
+        document.getElementById('testArchitectureBtn')?.addEventListener('click', () => {
+            log('=== v1.3.X 架構資訊 ===', 'log');
+            log('TypeScript 檔案位置: src/main.ts', 'log');
+            log('管理器: src/managers/', 'log');
+            log('服務: src/services/', 'log');
+            log('型別定義: src/types/', 'log');
+            log('工具函數: src/utils/', 'log');
+            log('', 'log');
+            log('⚠️ 注意：此測試版本無法執行完整的 TypeScript 功能', 'warning');
+            log('建議使用: npm run dev 啟動完整開發環境', 'log');
+        });
+        
+        document.getElementById('showInfoBtn')?.addEventListener('click', () => {
+            alert(
+                'v1.3.X 架構說明\n\n' +
+                '為什麼需要 Node.js？\n' +
+                '━━━━━━━━━━━━━━━━\n' +
+                '• v1.2.X 使用純 JavaScript，瀏覽器可直接執行\n' +
+                '• v1.3.X 使用 TypeScript，需要編譯為 JavaScript\n' +
+                '• TypeScript 提供型別安全、更好的開發體驗\n\n' +
+                '如何使用完整功能？\n' +
+                '━━━━━━━━━━━━━━━━\n' +
+                '1. 安裝 Node.js (https://nodejs.org/)\n' +
+                '2. 執行: npm install\n' +
+                '3. 執行: npm run dev\n' +
+                '4. 瀏覽器自動開啟 http://localhost:3000\n\n' +
+                '或者\n' +
+                '━━━━━━━━━━━━━━━━\n' +
+                '1. 執行: npm run build\n' +
+                '2. 開啟: dist/index.html\n' +
+                '3. 這會產生可直接開啟的版本'
+            );
+        });
+        
+        // 頁面載入時顯示歡迎訊息
+        window.addEventListener('DOMContentLoaded', () => {
+            log('=== v1.3.X 架構測試版本 ===', 'log');
+            log('版本: v1.3.0.0001', 'log');
+            log('', 'log');
+            log('⚠️ 此為測試版本，功能受限', 'warning');
+            log('完整功能請使用: npm run dev', 'log');
+            log('', 'log');
+            log('點擊上方按鈕開始測試', 'log');
+        });
+    </script>
+</body>
+</html>

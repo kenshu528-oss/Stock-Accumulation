@@ -1,0 +1,34 @@
+# Dependencies
+node_modules
+
+# Build outputs
+dist
+build
+*.min.js
+*.min.css
+
+# Archives
+archive
+netlify-upload
+
+# Config files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Test coverage
+coverage
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# HTML test files
+tests/*.html

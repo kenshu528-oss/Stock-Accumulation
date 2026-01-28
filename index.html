@@ -4,24 +4,26 @@
 版權所有 (c) 2025 徐國洲
 
 本軟體採用 CC BY-NC 4.0 授權條款 (禁止商業使用)
-詳細授權條款請參閱 LICENSE 檔案
+詳細授權條款請參考 LICENSE 檔案
 
 作者：徐國洲
-版本：v1.2.2.0008
-建立日期：2025-12-24
+版本：v1.2.2.0041
+建立日期：2025-01-28
+說明：v1.2.2.X 舊版系統
 -->
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>存股紀錄系統</title>
+    <title>存股紀錄系統 v1.2.2.0036</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📈</text></svg>">
     <link rel="stylesheet" href="src/styles.css">
 </head>
 <body>
     <div class="container">
         <header>
             <div class="header-top">
-                <h1>存股紀錄系統 <small id="versionInfo" class="version-tag">v1.2.2.0008</small></h1>
+                <h1>存股紀錄系統 <small id="versionInfo" class="version-tag">v1.2.2.0041</small></h1>
                 <div class="copyright-info">
                     <small>© 2025 徐國洲 | CC BY-NC 4.0 License | <a href="#" onclick="portfolio.showCopyrightInfo()">版權資訊</a></small>
                 </div>
@@ -32,17 +34,17 @@
                         <button id="summaryPrivacyBtn" class="btn-privacy-inline" title="顯示/隱藏總市值">
                             <span id="summaryPrivacyIcon">🙈</span>
                         </button>
-                        總市值: <span id="totalValue" class="summary-privacy-value">$0</span>
+                        總市值 <span id="totalValue" class="summary-privacy-value">$0</span>
                     </h2>
                     <div class="daily-change">
-                        今日變化: <span id="dailyChange" class="summary-privacy-value">+$0 (0%)</span>
+                        今日變動: <span id="dailyChange" class="summary-privacy-value">+$0 (0%)</span>
                     </div>
                 </div>
                 <div class="last-update">
-                    最後更新: <span id="lastUpdate">--</span>
+                    最後更新 <span id="lastUpdate">--</span>
                     <div class="sync-status">
                         <button id="cloudSyncBtn" class="btn-sync" title="雲端同步">☁️</button>
-                        <span id="syncStatus" class="sync-indicator">未同步</span>
+                        <span id="syncStatus" class="sync-indicator">本地</span>
                     </div>
                 </div>
             </div>
@@ -50,7 +52,7 @@
 
         <main>
             <div class="privacy-notice" id="privacyNotice">
-                🙈 隱私模式已啟用 - 金額資訊已隱藏。點擊左側按鈕可顯示金額。
+                🙈 隱私模式已啟用 - 敏感資訊已隱藏。點擊左側按鈕可顯示數據
             </div>
             
             <div class="controls" id="controlsContainer">
@@ -77,7 +79,7 @@
                 </div>
                 <div class="controls-settings">
                     <button id="viewModeBtn" class="btn btn-icon" title="切換介面模式">
-                        <span id="viewModeIcon">📱</span>
+                        <span id="viewModeIcon">🔄</span>
                     </button>
                     <button id="darkModeBtn" class="btn btn-icon" title="切換深色模式">
                         <span id="darkModeIcon">🌙</span>
@@ -97,22 +99,22 @@
                 <table class="stock-table" id="stockTable">
                     <thead>
                         <tr>
-                            <th>股票代碼</th>
+                            <th>股票代號</th>
                             <th>股票名稱</th>
                             <th>帳戶</th>
                             <th>購買日期</th>
-                            <th>持股數 <small>(可編輯)</small></th>
-                            <th>成本價 <small>(可編輯)</small></th>
+                            <th>持股數<small>(可編輯)</small></th>
+                            <th>成本價<small>(可編輯)</small></th>
                             <th>現價 / 更新時間</th>
-                            <th>市值 
+                            <th>市值
                                 <button id="stockPrivacyBtn" class="btn-privacy-table" title="顯示/隱藏個股金額">
                                     <span id="stockPrivacyIcon">👁️</span>
                                 </button>
                             </th>
-                            <th>損益 <span class="privacy-hint">💰</span></th>
-                            <th>損益率</th>
-                            <th>股息收入 <span class="privacy-hint">💰</span></th>
-                            <th>總報酬 <span class="privacy-hint">💰</span></th>
+                            <th>損益 <span class="privacy-hint">隱藏</span></th>
+                            <th>報酬率</th>
+                            <th>股息收入 <span class="privacy-hint">隱藏</span></th>
+                            <th>總報酬<span class="privacy-hint">隱藏</span></th>
                             <th>操作 <span class="dropdown-hint">▼</span></th>
                         </tr>
                     </thead>
@@ -130,13 +132,13 @@
                 <h3>新增股票</h3>
                 <form id="addStockForm">
                     <div class="form-group">
-                        <label for="stockCode">請輸入股號或名稱:</label>
-                        <input type="text" id="stockCode" required placeholder="例如: 2330、台積電、達明">
+                        <label for="stockCode">請輸入股票代號或名稱:</label>
+                        <input type="text" id="stockCode" required placeholder="例如: 2330或台積電">
                         <div class="search-status" id="codeSearchStatus"></div>
                     </div>
                     <div class="form-group" style="display: none;">
                         <label for="stockName">股票名稱:</label>
-                        <input type="text" id="stockName" placeholder="例如: 台積電 (可自動查詢)">
+                        <input type="text" id="stockName" placeholder="例如: 台積電(自動查詢)">
                         <div class="search-status" id="nameSearchStatus"></div>
                     </div>
                     <div class="form-group">
@@ -259,7 +261,7 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="dividendDate">除息日期:</label>
+                                <label for="dividendDate">股息日期:</label>
                                 <input type="date" id="dividendDate" required>
                             </div>
                         </div>
@@ -281,11 +283,11 @@
                         
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="sharesAtDate">除息日持股數:</label>
+                                <label for="sharesAtDate">股息時持股數:</label>
                                 <input type="number" id="sharesAtDate" required>
                             </div>
                             <div class="form-group">
-                                <label for="taxRate">扣稅率 (%):</label>
+                                <label for="taxRate">扣稅率(%):</label>
                                 <input type="number" step="0.01" id="taxRate" value="0" min="0" max="100">
                             </div>
                         </div>
@@ -334,10 +336,10 @@
                         </div>
                         
                         <div class="setting-item">
-                            <label for="defaultTaxRate">預設扣稅率 (%):</label>
+                            <label for="defaultTaxRate">預設扣稅率(%):</label>
                             <input type="number" id="defaultTaxRate" value="0" min="0" max="100" step="0.01">
                             <p class="setting-description">
-                                新增股息時的預設扣稅率 (可個別調整)
+                                新增股息時的預設扣稅率(可個別調整)
                             </p>
                         </div>
                     </div>
@@ -357,9 +359,32 @@
         </div>
     </div>
 
-    <script src="src/version.js"></script>
-    <script src="src/stock-api.js"></script>
-    <script src="src/cloud-sync.js"></script>
-    <script src="src/script.js"></script>
+    <!-- JavaScript 載入 -->
+    <script src="src/version.js?v=1.2.2.0041"></script>
+    <script src="src/stock-api.js?v=1.2.2.0041"></script>
+    <script src="src/cloud-sync.js?v=1.2.2.0041"></script>
+    <script src="src/script.js?v=1.2.2.0041"></script>
+    
+    <!-- 測試JavaScript載入 -->
+    <script>
+        console.log('✅ JavaScript檔案開始載入 - v1.2.2.0037');
+        
+        // 檢查必要的類別是否存在
+        window.addEventListener('load', function() {
+            console.log('🔍 檢查類別載入狀態:');
+            console.log('VersionManager:', typeof VersionManager);
+            console.log('StockAPI:', typeof StockAPI);
+            console.log('CloudSync:', typeof CloudSync);
+            console.log('StockPortfolio:', typeof StockPortfolio);
+            console.log('portfolio實例:', typeof portfolio);
+            
+            if (typeof portfolio === 'undefined') {
+                console.error('❌ portfolio實例未建立，可能有初始化錯誤');
+                alert('系統初始化失敗，請重新整理頁面或檢查瀏覽器控制台');
+            } else {
+                console.log('✅ 系統初始化成功');
+            }
+        });
+    </script>
 </body>
 </html>

@@ -1,46 +1,105 @@
-# Netlify 部署設定檔
-# Stock Portfolio System - Netlify Configuration
+# Netlify 部署設定檔 - v1.3.X 架構專用
+# Stock Portfolio System v1.3.X - Netlify Configuration
+# 
+# 此配置專為 v1.3.X TypeScript 架構設計
+# 與 v1.2.X 版本完全隔離
 
 [build]
-  # 基礎目錄設定為 netlify-upload
-  base = "netlify-upload"
+  # 建置命令 - 使用 npm 建置 TypeScript 專案
+  command = "npm run build"
   
-  # 發布目錄（netlify-upload 本身就是要發布的內容）
-  publish = "."
+  # 發布目錄 - Vite 建置輸出目錄
+  publish = "dist"
   
-  # 不需要建置命令（純靜態HTML）
-  command = ""
+  # 基礎目錄 - 專案根目錄
+  base = "."
 
-# 網站設定
+# 建置環境變數
 [build.environment]
   NODE_VERSION = "18"
+  NPM_FLAGS = "--production=false"
+  
+# 建置處理設定
+[build.processing]
+  skip_processing = false
 
-# 重定向規則（SPA支援）
+# 重定向規則（SPA 支援）
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+  force = false
 
-# 標頭設定（安全性和快取）
+# 安全性標頭
 [[headers]]
   for = "/*"
   [headers.values]
+    # 安全性標頭
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    
+    # CSP 設定（允許 API 呼叫）
+    Content-Security-Policy = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self' https://www.twse.com.tw https://www.tpex.org.tw https://query1.finance.yahoo.com https://api.allorigins.win; img-src 'self' data:; font-src 'self' data:;"
 
+# JavaScript 檔案快取（長期快取）
 [[headers]]
-  for = "/*.js"
+  for = "/js/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+    
+# CSS 檔案快取（長期快取）
+[[headers]]
+  for = "/css/*.css"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# 圖片檔案快取
 [[headers]]
-  for = "/*.css"
+  for = "/images/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# 字型檔案快取
+[[headers]]
+  for = "/fonts/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# HTML 檔案（不快取，確保更新）
 [[headers]]
   for = "/index.html"
   [headers.values]
     Cache-Control = "public, max-age=0, must-revalidate"
+
+# Source map 檔案（開發用）
+[[headers]]
+  for = "/*.map"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
+
+# API 預檢請求處理
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
+
+# 錯誤頁面重定向
+[[redirects]]
+  from = "/404"
+  to = "/index.html"
+  status = 200
+
+# 舊版本重定向（如果需要）
+[[redirects]]
+  from = "/v1.2/*"
+  to = "https://your-v1-2-site.netlify.app/:splat"
+  status = 301
+  force = true
+
+# 函數設定（如果使用 Netlify Functions）
+[functions]
+  directory = "netlify/functions"

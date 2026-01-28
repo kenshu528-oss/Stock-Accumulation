@@ -1,7 +1,7 @@
 /**
- * 資料儲存管理器
+ * 資�??��?管�???
  * 
- * 負責處理本地儲存操作、資料版本控制和遷移
+ * 負責?��??�地?��??��??��??��??�控?��??�移
  */
 
 import { PortfolioData, PortfolioSettings } from '../types/interfaces.js';
@@ -11,25 +11,12 @@ import { VersionManager } from '../utils/VersionManager.js';
 export class DataStorage {
   private readonly STORAGE_KEY = 'stockPortfolio';
   private readonly VERSION_KEY = 'portfolioVersion';
-  private readonly CURRENT_VERSION = 'v1.3.0.0001'; // 新模組化系統版本
+  private readonly CURRENT_VERSION = 'v1.3.0.0014'; // 新模組化系統版本
+
+  // 建置?��??��??�已移至?�本管�?系統
 
   /**
-   * 生成新的建置版本號（4位數格式）
-   */
-  private generateBuildNumber(): string {
-    const now = new Date();
-    const year = now.getFullYear().toString().slice(-2); // 後兩位年份
-    const month = (now.getMonth() + 1).toString().padStart(2, '0');
-    const day = now.getDate().toString().padStart(2, '0');
-    const hour = now.getHours().toString().padStart(2, '0');
-    
-    // 生成4位數建置號：年月日時（壓縮格式）
-    const buildNumber = `${year}${month}${day}`.slice(-4);
-    return buildNumber.padStart(4, '0');
-  }
-
-  /**
-   * 更新版本號（用於bug修正）
+   * ?�新?�本?��??�於bug修正�?
    */
   updateVersion(currentVersion: string, type: 'patch' | 'minor' | 'major' = 'patch'): string {
     const versionParts = currentVersion.replace('v', '').split('.');
@@ -58,13 +45,13 @@ export class DataStorage {
         break;
     }
     
-    // 確保建置號為4位數
+    // 確�?建置?�為4位數
     const buildStr = build.toString().padStart(4, '0');
     return `v${major}.${minor}.${patch}.${buildStr}`;
   }
 
   /**
-   * 載入投資組合資料
+   * 載入?��?組�?資�?
    */
   async loadData(): Promise<PortfolioData | null> {
     try {
@@ -75,55 +62,55 @@ export class DataStorage {
 
       const data = JSON.parse(dataString) as PortfolioData;
       
-      // 驗證資料完整性
+      // 驗�?資�?完整??
       const validation = validatePortfolioData(data);
       if (!validation.isValid) {
-        console.warn('載入的資料驗證失敗:', validation.errors);
+        console.warn('載入?��??��?證失??', validation.errors);
         return this.createDefaultData();
       }
 
-      // 檢查版本並進行遷移
+      // 檢查?�本並進�??�移
       const migratedData = await this.migrateData(data);
       return migratedData;
       
     } catch (error) {
-      console.error('載入資料失敗:', error);
+      console.error('載入資�?失�?:', error);
       return this.createDefaultData();
     }
   }
 
   /**
-   * 儲存投資組合資料
+   * ?��??��?組�?資�?
    */
   async saveData(data: PortfolioData): Promise<boolean> {
     try {
-      // 驗證資料
+      // 驗�?資�?
       const validation = validatePortfolioData(data);
       if (!validation.isValid) {
-        console.error('儲存資料驗證失敗:', validation.errors);
+        console.error('?��?資�?驗�?失�?:', validation.errors);
         return false;
       }
 
-      // 更新版本和時間戳
+      // ?�新?�本?��??�戳
       const dataToSave: PortfolioData = {
         ...data,
         version: this.CURRENT_VERSION,
         lastUpdate: new Date().toISOString()
       };
 
-      // 儲存到 localStorage
+      // ?��???localStorage
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(dataToSave));
       localStorage.setItem(this.VERSION_KEY, this.CURRENT_VERSION);
       
       return true;
     } catch (error) {
-      console.error('儲存資料失敗:', error);
+      console.error('?��?資�?失�?:', error);
       return false;
     }
   }
 
   /**
-   * 清除所有資料
+   * 清除?�?��???
    */
   clearData(): void {
     localStorage.removeItem(this.STORAGE_KEY);
@@ -131,7 +118,7 @@ export class DataStorage {
   }
 
   /**
-   * 檢查儲存空間使用量
+   * 檢查?��?空�?使用??
    */
   getStorageUsage(): { used: number; available: number; percentage: number } {
     try {
@@ -142,7 +129,7 @@ export class DataStorage {
         }
       }
 
-      // localStorage 通常限制為 5-10MB，這裡假設 5MB
+      // localStorage ?�常?�制??5-10MB，這裡?�設 5MB
       const maxSize = 5 * 1024 * 1024; // 5MB in bytes
       const percentage = (totalSize / maxSize) * 100;
 
@@ -152,20 +139,20 @@ export class DataStorage {
         percentage: Math.round(percentage * 100) / 100
       };
     } catch (error) {
-      console.error('檢查儲存空間失敗:', error);
+      console.error('檢查?��?空�?失�?:', error);
       return { used: 0, available: 0, percentage: 0 };
     }
   }
 
   /**
-   * 建立預設資料
+   * 建�??�設資�?
    */
   private createDefaultData(): PortfolioData {
     const defaultSettings: PortfolioSettings = {
       darkMode: false,
-      privacyMode: true, // 預設啟用隱私模式
+      privacyMode: true, // ?�設?�用?��?模�?
       autoUpdate: true,
-      updateInterval: 30000, // 30秒
+      updateInterval: 30000, // 30�?
       dividendAdjustment: true,
       defaultTaxRate: 0,
       currency: 'TWD',
@@ -178,12 +165,12 @@ export class DataStorage {
       currentAccount: '帳戶1',
       settings: defaultSettings,
       lastUpdate: new Date().toISOString(),
-      version: 'v1.0.0.0001' // 使用4位數建置號格式
+      version: 'v1.0.0.0001' // 使用4位數建置?�格�?
     };
   }
 
   /**
-   * 資料版本遷移
+   * 資�??�本?�移
    */
   private async migrateData(data: PortfolioData): Promise<PortfolioData> {
     const currentVersion = data.version || 'v0.0.0.0001';
@@ -192,29 +179,29 @@ export class DataStorage {
       return data;
     }
 
-    console.log(`正在遷移資料從版本 ${currentVersion} 到 ${this.CURRENT_VERSION}`);
+    console.log(`�?��?�移資�?從�???${currentVersion} ??${this.CURRENT_VERSION}`);
 
     let migratedData = { ...data };
 
-    // 版本遷移邏輯
+    // ?�本?�移?�輯
     if (VersionManager.compareVersions(currentVersion, 'v1.0.0.0001') < 0) {
       migratedData = this.migrateTo1_0_0(migratedData);
     }
 
-    // 更新版本號
+    // ?�新?�本??
     migratedData.version = this.CURRENT_VERSION;
     
-    // 儲存遷移後的資料
+    // ?��??�移後�?資�?
     await this.saveData(migratedData);
     
     return migratedData;
   }
 
   /**
-   * 遷移到版本 1.0.0
+   * ?�移?��???1.0.0
    */
   private migrateTo1_0_0(data: any): PortfolioData {
-    // 確保所有必要欄位存在
+    // 確�??�?��?要�?位�???
     const migratedData: PortfolioData = {
       stocks: data.stocks || [],
       accounts: data.accounts || ['帳戶1', '帳戶2'],
@@ -233,7 +220,7 @@ export class DataStorage {
       version: 'v1.0.0.0001'
     };
 
-    // 遷移股票記錄格式
+    // ?�移?�票記�??��?
     migratedData.stocks = migratedData.stocks.map(stock => ({
       ...stock,
       dividends: stock.dividends || [],
@@ -252,23 +239,23 @@ export class DataStorage {
   }
 
   /**
-   * 獲取當前系統版本
+   * ?��??��?系統?�本
    */
   getCurrentVersion(): string {
     return this.CURRENT_VERSION;
   }
 
   /**
-   * 更新系統版本（用於開發階段）
+   * ?�新系統?�本（用?��??��?段�?
    */
   updateSystemVersion(type: 'major' | 'minor' | 'patch' | 'build' = 'build'): string {
     const newVersion = VersionManager.incrementVersion(this.CURRENT_VERSION, type);
-    console.log(`版本更新: ${this.CURRENT_VERSION} → ${newVersion}`);
+    console.log(`?�本?�新: ${this.CURRENT_VERSION} ??${newVersion}`);
     return newVersion;
   }
 
   /**
-   * 匯出資料為 JSON
+   * ?�出資�???JSON
    */
   exportData(): string {
     const dataString = localStorage.getItem(this.STORAGE_KEY);
@@ -276,14 +263,14 @@ export class DataStorage {
   }
 
   /**
-   * 從 JSON 匯入資料
+   * �?JSON ?�入資�?
    */
   async importData(jsonString: string): Promise<boolean> {
     try {
       const data = JSON.parse(jsonString) as PortfolioData;
       return await this.saveData(data);
     } catch (error) {
-      console.error('匯入資料失敗:', error);
+      console.error('?�入資�?失�?:', error);
       return false;
     }
   }

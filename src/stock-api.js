@@ -144,23 +144,101 @@ class StockAPI {
         console.log(`股票類型: ${stockType}`);
         
         try {
-            switch (stockType) {
-                case 'listed': // 上市股票
-                    return await this.fetchFromTWSEListed(stockCode);
-                case 'otc': // 上櫃股票
-                    return await this.fetchFromTPEx(stockCode);
-                case 'emerging': // 興櫃股票
-                    return await this.fetchFromEmerging(stockCode);
-                case 'etf': // ETF
-                    return await this.fetchFromETF(stockCode);
-                default:
-                    // 如果無法判斷類型，依序嘗試各個API
-                    return await this.fetchFromAllTWSE(stockCode);
+            // 優先嘗試即時股價API
+            try {
+                return await this.fetchRealtimePrice(stockCode);
+            } catch (realtimeError) {
+                console.log(`📊 即時股價API失敗，改用收盤價API: ${realtimeError.message}`);
+                
+                // 即時API失敗時，使用收盤價API作為備援
+                switch (stockType) {
+                    case 'listed': // 上市股票
+                        return await this.fetchFromTWSEListed(stockCode);
+                    case 'otc': // 上櫃股票
+                        return await this.fetchFromTPEx(stockCode);
+                    case 'emerging': // 興櫃股票
+                        return await this.fetchFromEmerging(stockCode);
+                    case 'etf': // ETF
+                        return await this.fetchFromETF(stockCode);
+                    default:
+                        // 如果無法判斷類型，依序嘗試各個API
+                        return await this.fetchFromAllTWSE(stockCode);
+                }
             }
         } catch (error) {
             console.warn(`證交所API查詢失敗: ${error.message}`);
             throw error;
         }
+    }
+
+    async fetchRealtimePrice(stockCode) {
+        console.log(`嘗試即時股價API: ${stockCode}`);
+        
+        // 判斷交易所
+        const exchange = this.getExchange(stockCode);
+        const symbol = `${exchange}_${stockCode}.tw`;
+        
+        // 證交所即時股價API - 使用CORS代理
+        const realtimeUrl = `https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch=${symbol}`;
+        const corsProxy = 'https://api.allorigins.win/raw?url=';
+        const proxyUrl = corsProxy + encodeURIComponent(realtimeUrl);
+        
+        const response = await this.fetchWithTimeout(proxyUrl, { 
+            timeout: 8000,
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Referer': 'https://mis.twse.com.tw/'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`即時股價API錯誤: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.msgArray || data.msgArray.length === 0) {
+            throw new Error('即時股價API無資料');
+        }
+        
+        const stockData = data.msgArray[0];
+        
+        // 取得即時價格 (優先順序: 成交價 > 買價 > 賣價 > 昨收價)
+        let currentPrice = parseFloat(stockData.z) || // 成交價
+                          parseFloat(stockData.b) || // 買價
+                          parseFloat(stockData.a) || // 賣價
+                          parseFloat(stockData.y);   // 昨收價
+        
+        if (!currentPrice || currentPrice <= 0) {
+            throw new Error('無法取得有效的即時價格');
+        }
+        
+        const yesterdayClose = parseFloat(stockData.y) || currentPrice;
+        const change = currentPrice - yesterdayClose;
+        const changePercent = yesterdayClose > 0 ? (change / yesterdayClose * 100) : 0;
+        
+        return {
+            price: currentPrice,
+            volume: parseInt(stockData.v) || 0,
+            high: parseFloat(stockData.h) || currentPrice,
+            low: parseFloat(stockData.l) || currentPrice,
+            open: parseFloat(stockData.o) || currentPrice,
+            previousClose: yesterdayClose,
+            change: change,
+            changePercent: changePercent,
+            market: exchange === 'tse' ? 'TWSE' : 'TPEx',
+            timestamp: new Date(),
+            isRealtime: true
+        };
+    }
+
+    getExchange(stockCode) {
+        // 根據股票代碼判斷交易所
+        if (stockCode.match(/^00\d+/)) return 'tse'; // ETF通常在上市
+        if (stockCode.match(/^[1-3]\d{3}$/)) return 'tse'; // 上市股票 (1000-3999)
+        if (stockCode.match(/^[4-8]\d{3}$/)) return 'otc'; // 上櫃股票 (4000-8999)
+        if (stockCode.match(/^9\d{3}$/)) return 'tse'; // 9000系列通常在上市
+        return 'tse'; // 預設為上市
     }
     
     getStockType(stockCode) {
@@ -211,7 +289,7 @@ class StockAPI {
     }
     
     async fetchFromTPEx(stockCode) {
-        // 上櫃股票API (櫃買中心)
+        // 上櫃股票API (櫃買中心) - 使用CORS代理
         const today = new Date();
         const dateStr = today.getFullYear() + '/' + 
                        String(today.getMonth() + 1).padStart(2, '0') + '/' + 
@@ -219,7 +297,11 @@ class StockAPI {
         
         const tpexUrl = `https://www.tpex.org.tw/web/stock/aftertrading/daily_close_quotes/stk_quote_result.php?l=zh-tw&d=${dateStr}&stkno=${stockCode}`;
         
-        const response = await this.fetchWithTimeout(tpexUrl, { timeout: 10000 });
+        // 使用CORS代理避免跨域問題
+        const corsProxy = 'https://api.allorigins.win/raw?url=';
+        const proxyUrl = corsProxy + encodeURIComponent(tpexUrl);
+        
+        const response = await this.fetchWithTimeout(proxyUrl, { timeout: 10000 });
         
         if (!response.ok) {
             throw new Error(`TPEx API 錯誤: ${response.status}`);

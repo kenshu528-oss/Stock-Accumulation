@@ -4,7 +4,8 @@
  * 提供各種資料驗證函數，確保資料完整性和正確性
  */
 
-import { StockRecord, DividendRecord, Account, PortfolioData } from '../types/interfaces.js';
+import { StockRecord, DividendRecord, PortfolioData } from '../types/interfaces.js';
+// Account 型別暫時未使用，保留供未來功能擴展
 
 // 驗證結果介面
 export interface ValidationResult {

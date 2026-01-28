@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>v1.3.X 架構狀態檢查</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .check-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: white;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        
+        .check-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .check-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+        
+        .check-icon.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .check-icon.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .check-icon.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .check-text {
+            flex: 1;
+        }
+        
+        .check-text strong {
+            display: block;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        
+        .check-text small {
+            color: #666;
+            font-size: 13px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            text-decoration: none;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+        }
+        
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+        
+        .code-block {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+        
+        .alert {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 13px;
+            border-top: 1px solid #e9ecef;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 v1.3.X 架構狀態檢查</h1>
+            <p>檢查專案檔案結構和配置是否正確</p>
+        </div>
+        
+        <div class="content">
+            <div class="alert alert-info">
+                <strong>📋 檢查說明</strong><br>
+                此頁面會檢查 v1.3.X 架構的所有必要檔案是否存在。這是一個靜態檢查，不需要 Node.js。
+            </div>
+            
+            <div class="section">
+                <h2>📦 核心檔案檢查</h2>
+                <div id="coreFiles"></div>
+            </div>
+            
+            <div class="section">
+                <h2>🔧 配置檔案檢查</h2>
+                <div id="configFiles"></div>
+            </div>
+            
+            <div class="section">
+                <h2>📁 目錄結構檢查</h2>
+                <div id="directories"></div>
+            </div>
+            
+            <div class="section">
+                <h2>🎯 下一步建議</h2>
+                <div id="nextSteps"></div>
+            </div>
+            
+            <div class="section">
+                <h2>🚀 快速開始</h2>
+                <p style="margin-bottom: 15px;">選擇您的測試方式：</p>
+                
+                <button class="btn" onclick="showDevInstructions()">
+                    方法 1：使用 Vite 開發伺服器（推薦）
+                </button>
+                
+                <button class="btn btn-secondary" onclick="showBuildInstructions()">
+                    方法 2：建置生產版本
+                </button>
+                
+                <button class="btn btn-secondary" onclick="showManualTest()">
+                    方法 3：手動測試核心功能
+                </button>
+                
+                <div id="instructions" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            v1.3.0.0001 | © 2025 徐國洲 | CC BY-NC 4.0 License
+        </div>
+    </div>
+    
+    <script>
+        // 檢查項目配置
+        const checks = {
+            coreFiles: [
+                { path: 'src/main.ts', name: 'TypeScript 入口點', required: true },
+                { path: 'index.html', name: '主頁面', required: true },
+                { path: 'package.json', name: 'NPM 配置', required: true },
+                { path: 'tsconfig.json', name: 'TypeScript 配置', required: true },
+            ],
+            configFiles: [
+                { path: 'vite.config.ts', name: 'Vite 建置配置', required: true },
+                { path: 'jest.config.js', name: 'Jest 測試配置', required: true },
+                { path: '.eslintrc.json', name: 'ESLint 配置', required: false },
+                { path: '.prettierrc.json', name: 'Prettier 配置', required: false },
+            ],
+            directories: [
+                { path: 'src/managers', name: '管理器目錄', required: true },
+                { path: 'src/services', name: '服務目錄', required: true },
+                { path: 'src/types', name: '型別定義目錄', required: true },
+                { path: 'src/utils', name: '工具函數目錄', required: true },
+                { path: 'tests', name: '測試目錄', required: false },
+            ]
+        };
+        
+        // 執行檢查
+        async function runChecks() {
+            let allPassed = true;
+            
+            for (const [category, items] of Object.entries(checks)) {
+                const container = document.getElementById(category);
+                
+                for (const item of items) {
+                    const exists = await checkFileExists(item.path);
+                    const status = exists ? 'success' : (item.required ? 'error' : 'warning');
+                    
+                    if (!exists && item.required) {
+                        allPassed = false;
+                    }
+                    
+                    const icon = exists ? '✓' : (item.required ? '✗' : '⚠');
+                    const statusText = exists ? '存在' : '不存在';
+                    
+                    container.innerHTML += `
+                        <div class="check-item">
+                            <div class="check-icon ${status}">${icon}</div>
+                            <div class="check-text">
+                                <strong>${item.name}</strong>
+                                <small>${item.path} - ${statusText}</small>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            // 顯示下一步建議
+            showNextSteps(allPassed);
+        }
+        
+        // 檢查檔案是否存在（簡化版本）
+        async function checkFileExists(path) {
+            try {
+                const response = await fetch(path, { method: 'HEAD' });
+                return response.ok;
+            } catch {
+                return false;
+            }
+        }
+        
+        // 顯示下一步建議
+        function showNextSteps(allPassed) {
+            const container = document.getElementById('nextSteps');
+            
+            if (allPassed) {
+                container.innerHTML = `
+                    <div class="check-item">
+                        <div class="check-icon success">✓</div>
+                        <div class="check-text">
+                            <strong>所有必要檔案都已就緒！</strong>
+                            <small>您可以開始測試應用程式了</small>
+                        </div>
+                    </div>
+                `;
+            } else {
+                container.innerHTML = `
+                    <div class="check-item">
+                        <div class="check-icon error">✗</div>
+                        <div class="check-text">
+                            <strong>部分必要檔案缺失</strong>
+                            <small>請確認專案結構是否完整</small>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // 顯示開發伺服器說明
+        function showDevInstructions() {
+            const container = document.getElementById('instructions');
+            container.innerHTML = `
+                <div class="alert alert-info">
+                    <strong>📝 使用 Vite 開發伺服器</strong><br><br>
+                    
+                    <strong>步驟 1：安裝 Node.js</strong><br>
+                    如果尚未安裝，請前往 <a href="https://nodejs.org/" target="_blank">https://nodejs.org/</a> 下載 LTS 版本<br><br>
+                    
+                    <strong>步驟 2：安裝依賴</strong><br>
+                    在專案目錄中執行：
+                    <div class="code-block">npm install</div>
+                    
+                    <strong>步驟 3：啟動開發伺服器</strong><br>
+                    <div class="code-block">npm run dev</div>
+                    
+                    <strong>步驟 4：開啟瀏覽器</strong><br>
+                    自動開啟 http://localhost:3000 或手動前往該網址<br><br>
+                    
+                    <strong>✨ 優點：</strong>
+                    <ul style="margin-top: 10px; margin-left: 20px;">
+                        <li>支援 TypeScript 即時編譯</li>
+                        <li>熱模組替換（修改代碼自動重新載入）</li>
+                        <li>完整的開發體驗</li>
+                        <li>錯誤提示和除錯工具</li>
+                    </ul>
+                </div>
+            `;
+        }
+        
+        // 顯示建置說明
+        function showBuildInstructions() {
+            const container = document.getElementById('instructions');
+            container.innerHTML = `
+                <div class="alert alert-info">
+                    <strong>🏗️ 建置生產版本</strong><br><br>
+                    
+                    <strong>步驟 1：建置專案</strong><br>
+                    <div class="code-block">npm run build</div>
+                    這會將 TypeScript 編譯為 JavaScript 並打包所有資源到 dist/ 目錄<br><br>
+                    
+                    <strong>步驟 2：預覽建置結果</strong><br>
+                    <div class="code-block">npm run preview</div>
+                    這會啟動一個本地伺服器預覽建置後的檔案<br><br>
+                    
+                    <strong>步驟 3：部署</strong><br>
+                    將 dist/ 目錄的內容上傳到：
+                    <ul style="margin-top: 10px; margin-left: 20px;">
+                        <li>Netlify Drop</li>
+                        <li>GitHub Pages</li>
+                        <li>任何靜態網頁伺服器</li>
+                    </ul>
+                </div>
+            `;
+        }
+        
+        // 顯示手動測試說明
+        function showManualTest() {
+            const container = document.getElementById('instructions');
+            container.innerHTML = `
+                <div class="alert alert-warning">
+                    <strong>⚠️ 手動測試限制</strong><br><br>
+                    
+                    由於瀏覽器無法直接執行 TypeScript，手動測試需要先建置專案。<br><br>
+                    
+                    <strong>建議：</strong>
+                    <ol style="margin-top: 10px; margin-left: 20px;">
+                        <li>使用「方法 1：Vite 開發伺服器」獲得最佳體驗</li>
+                        <li>或使用「方法 2：建置生產版本」後再測試</li>
+                    </ol>
+                    <br>
+                    
+                    <strong>如果您堅持手動測試：</strong><br>
+                    1. 先執行 <code>npm run build</code><br>
+                    2. 開啟 dist/index.html<br>
+                    3. 在瀏覽器控制台中測試功能
+                </div>
+            `;
+        }
+        
+        // 頁面載入時執行檢查
+        window.addEventListener('DOMContentLoaded', runChecks);
+    </script>
+</body>
+</html>
