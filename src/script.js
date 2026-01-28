@@ -12,7 +12,7 @@
  * ⚠️ IMPORTANT: Commercial use is strictly prohibited!
  * 
  * 作者：徐國洲
- * 版本：v1.2.2.0041
+ * 版本：v1.2.2.0042
  * 建立日期：2025-12-24
  * 
  * 功能：

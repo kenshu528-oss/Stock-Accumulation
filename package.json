@@ -1,6 +1,6 @@
 {
   "name": "stock-portfolio-system",
-  "version": "1.2.2.0041",
+  "version": "1.2.2.0042",
   "description": "存股紀?�系�?v1.3.X - TypeScript 模�??�架構�?�?,
   "type": "module",
   "main": "src/main.ts",

@@ -12,7 +12,7 @@
 // 版本管理系統
 class VersionManager {
     constructor() {
-        this.currentVersion = 'v1.2.2.0041';
+        this.currentVersion = 'v1.2.2.0042';
         this.versionHistory = [
             {
                 version: '1.0.0.0',
@@ -296,6 +296,17 @@ class VersionManager {
                     '新增詳細的股息計算除錯日誌',
                     '修正股息計算錯誤問題',
                     '1000股 × 1.27元 = 1,270元（正確）'
+                ]
+            },
+            {
+                version: '1.2.2.0042',
+                date: '2025-01-28',
+                features: [
+                    '修正版本號不一致問題',
+                    '統一所有版本顯示為v1.2.2.0042',
+                    '確認即時股價API正常運作',
+                    '分析並確認錯誤處理合理性',
+                    '系統運作狀態良好'
                 ]
             },
             {
